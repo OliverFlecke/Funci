@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                Compiler
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Compiler to parse and compile a (so far unnamed) functional language
 -- description:         
 license:             BSD3
