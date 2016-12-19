@@ -1,4 +1,4 @@
-module Lexer where 
+module HandLexer where 
 
 import Data.Char
 
@@ -86,10 +86,14 @@ lexer ('=':cs) = addToken (Operator Assignment) cs
 -- Find digits in the string 
 lexer (c : cs) | isDigit c = 
     let (digits, cs') = break (not . isDigitOrDot) $ c:cs
-    in addToken (Num (read digits)) cs'
+    in if countDots digits <= 1 
+        then addToken (Num (read digits)) cs'
+        else Left "Could not parse: number contains too many '.'"
     where 
         isDigitOrDot :: Char -> Bool 
         isDigitOrDot c = isDigit c || c == '.'
+        countDots :: [Char] -> Int
+        countDots = length . filter (\d -> d == '.')
 
 -- Find names in the string
 lexer (c : cs) | isLetter c = 

@@ -1,6 +1,6 @@
 module Main where
 
-import Lexer 
+import HandLexer 
 
 main :: IO ()
 -- main = putStrLn "This is still just a dummy function. Need to setup a good way to test everything"
