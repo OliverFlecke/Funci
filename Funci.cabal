@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                Funci
-version:             0.1.0.3
+version:             0.1.0.4
 synopsis:            Funci to parse and compile a (so far unnamed) functional language
 description:         This projects focus on building a simple compiler for a functional language. This is not intended to be something for real use, but only for learning.   
 license:             BSD3
@@ -23,16 +23,28 @@ executable Funci
 
 library
   exposed-modules:      HandLexer
+                      , HandParser
+                      , HandSyntax
   build-depends:        base
   hs-source-dirs:       src
   default-language:     Haskell2010
 
-test-suite HandLexerTests
+test-suite HLexer
   type:                 exitcode-stdio-1.0
   main-is:              HandLexerTests.hs
   hs-source-dirs:       tests
   build-depends:        base
                       , Funci
+                      , hspec
+                      , QuickCheck
+  default-language:     Haskell2010
+
+test-suite HParser
+  type:                 exitcode-stdio-1.0
+  main-is:              HandParserTests.hs
+  hs-source-dirs:       tests
+  build-depends:        base 
+                      , Funci 
                       , hspec
                       , QuickCheck
   default-language:     Haskell2010

@@ -1,7 +1,7 @@
 module Main where
 
 import HandLexer
-import Syntax
+import HandSyntax
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
@@ -17,11 +17,11 @@ main = hspec $ do
             lexer "{}" `shouldBe` Right [Bracket LeftBracket, Bracket RightBracket]
     describe "Testing the different operators" $ do
         it "should return the tokenized operator" $ do 
-            lexer "+" `shouldBe` Right [Operator Plus]
-            lexer "-" `shouldBe` Right [Operator Minus]
-            lexer "*" `shouldBe` Right [Operator Times]
-            lexer "/" `shouldBe` Right [Operator Divide]
-            lexer "%" `shouldBe` Right [Operator Reminder]
+            lexer "+" `shouldBe` Right [Operator Add]
+            lexer "-" `shouldBe` Right [Operator Sub]
+            lexer "*" `shouldBe` Right [Operator Mul]
+            lexer "/" `shouldBe` Right [Operator Div]
+            lexer "%" `shouldBe` Right [Operator Rem]
             lexer "=" `shouldBe` Right [Operator Assignment]
     describe "Nummeric tests" $ do 
         it "should convert the strings into numbers" $ do 
@@ -46,3 +46,9 @@ main = hspec $ do
     describe "Testing that comments are removed" $ do
         it "Should only return the code, not the comment" $ do
             lexer "-- This is a comment * + \n if" `shouldBe` Right [Keyword If]
+    testArithmicLexing
+
+testArithmicLexing = 
+    describe "Testing the lexing of arithmic strings" $ do 
+        it "Add two numbers together" $ do 
+            lexer "2 + 3" `shouldBe` Right [Num 2, Operator Add, Num 3]

@@ -1,51 +1,7 @@
 module HandLexer where 
 
 import Data.Char
-
--- This is used for the names of the identifiers
-type Name = String 
-
--- Tokens which the input can be transformed into
-data Token = 
-    Num Float  -- How do I get two different tokens for ints and floats?
-    | Keyword Keywords 
-    | Operator Operators 
-    | Identifier Name 
-    | Bracket Brackets
-    | Semicolon 
-    deriving (Show, Eq)
-
--- Keywords in the language
-data Keywords = 
-    If 
-    | Then 
-    | Else 
-    | Where
-    | Case 
-    | Of 
-    | Let 
-    | In 
-    deriving (Show, Eq)
-
--- Default operators in the languages
-data Operators = 
-    Plus 
-    | Minus 
-    | Times 
-    | Divide 
-    | Reminder
-    | Assignment 
-    deriving (Show, Eq)
-
--- Different kinds of brackets 
-data Brackets = 
-    LeftParen
-    | RightParen
-    | LeftBracket 
-    | RightBracket
-    | LeftSquareBracket
-    | RightSquareBracket
-    deriving (Show, Eq)
+import HandSyntax
 
 addToken :: Token -> String -> Either String [Token]
 addToken t s = lexer s >>= (\ts -> Right $ t : ts)
@@ -76,11 +32,11 @@ lexer ('{':cs) = addToken (Bracket LeftBracket) cs
 lexer ('}':cs) = addToken (Bracket RightBracket) cs 
 
 -- Handing operators
-lexer ('+':cs) = addToken (Operator Plus) cs
-lexer ('-':cs) = addToken (Operator Minus) cs
-lexer ('*':cs) = addToken (Operator Times) cs
-lexer ('/':cs) = addToken (Operator Divide) cs
-lexer ('%':cs) = addToken (Operator Reminder) cs
+lexer ('+':cs) = addToken (Operator Add) cs
+lexer ('-':cs) = addToken (Operator Sub) cs
+lexer ('*':cs) = addToken (Operator Mul) cs
+lexer ('/':cs) = addToken (Operator Div) cs
+lexer ('%':cs) = addToken (Operator Rem) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
 
 -- Find digits in the string 

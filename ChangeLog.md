@@ -1,9 +1,19 @@
 # Revision history for Compiler
 
+# Todo list: 
+* Get the HandParser to return the error messages properly instead of just calling error 
+* Write test cases for the HandParser
+
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
-### 0.1.0.3  -- 2016-12-18
+### 0.1.0.4  -- 2016-12-20
+* Renamed the arithmic operators abstract representation, so they all have the same length (so it is now called Add instead of Plus and so on).
+* All the definitions of the syntax has now been moved to the new file \src\HandSyntax.hs
+* Defined test for testing the parsing for alrithmic operations. 
+* The parser can now handle simple alrithmics with addition, subtraction, multiplcation, and division (rem is still missing). 
+
+### 0.1.0.3  -- 2016-12-19
 * Got Hspec and QuickCheck properly installed, so automatic tests can start to be created. Renamed the Lexer.hs to HandLexer.hs, assuming it will later be replaced be a Lexer (or even Parser only) version. 
 
 Tests for simple opertors, numbers, and brackets are included. 
