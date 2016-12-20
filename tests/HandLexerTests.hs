@@ -1,6 +1,7 @@
 module Main where
 
 import HandLexer
+import Syntax
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
@@ -34,30 +35,14 @@ main = hspec $ do
             lexer "if" `shouldBe` Right [Keyword If]
             lexer "then" `shouldBe` Right [Keyword Then]
             lexer "else" `shouldBe` Right [Keyword Else]
+            -- This should maybe not fail later on, if the lexer should catch these errors
             lexer "if then else" `shouldBe` Right [Keyword If, Keyword Then, Keyword Else]   
             lexer "where" `shouldBe` Right [Keyword Where]
---     testLexer "if" [Keyword If]
---     testLexer "then" [Keyword Then]
---     testLexer "else" [Keyword Else]
---     -- Note: This should actually fail later on
---     testLexer "if then else" [Keyword If, Keyword Then, Keyword Else]
---     testLexer "where" [Keyword Where]
---     testLexer "case of" [Keyword Case, Keyword Of]
---     testLexer "let in" [Keyword Let, Keyword In]
---     testLexer "abc" [Identifier "abc"]
---     testLexer "a = 10" [Identifier "a", Operator Assignment, Num 10]
---     testLexer "$" []
---     testLexer "-- This is a comment * + \n if" [Keyword If]
-
--- -- This is a temporary way to test lexer until I get online
--- -- No way good, need to be automated
--- testLexer :: String -> [Token] -> IO () 
--- testLexer s e = do 
---     putStr $ "Testing: " ++ s 
---     let tokens = lexer s 
---     case tokens of 
---         Left s' -> putStrLn $ "\n\t-- Lexing error --\n" ++ s' ++ "\n"
---         Right tokens' -> if tokens' == e 
---             then putStrLn $ " \t\t\tValid" 
---             else putStrLn $ " \t-- Invalid - Should have been: \t" ++ (show e) 
-
+            lexer "case of" `shouldBe` Right [Keyword Case, Keyword Of]
+            lexer "let in" `shouldBe` Right [Keyword Let, Keyword In]
+            lexer "abc" `shouldBe` Right [Identifier "abc"]
+            lexer "a = 10" `shouldBe` Right [Identifier "a", Operator Assignment, Num 10]
+            lexer "$" `shouldBe` Left "Unexpected character: \t$\n                      \t^"
+    describe "Testing that comments are removed" $ do
+        it "Should only return the code, not the comment" $ do
+            lexer "-- This is a comment * + \n if" `shouldBe` Right [Keyword If]
