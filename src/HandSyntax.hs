@@ -9,6 +9,7 @@ type Id = String
 -- Tokens which the input can be transformed into
 data Token = 
     Num Float  -- How do I get two different tokens for ints and floats?
+    | Boolean Bool
     | Keyword Keywords 
     | Operator Operator 
     | Identifier Id 
@@ -20,6 +21,7 @@ data Token =
 -- (eventually turned into a valid program)
 data Expr = 
     Const Float
+    | ConstBool Bool
     | Var Id 
     | Prim Operator
     | App Expr Expr 

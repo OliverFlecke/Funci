@@ -50,6 +50,9 @@ lexer ('/':cs) = addToken (Operator Div) cs
 lexer ('%':cs) = addToken (Operator Rem) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
 
+-- Find boolean values
+lexer ('T':'r':'u':'e' : cs) = addToken (Boolean True) cs
+lexer ('F':'a':'l':'s':'e' : cs) = addToken (Boolean False) cs
 
 -- Find digits in the string 
 lexer (c : cs) | isDigit c = 

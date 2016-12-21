@@ -6,19 +6,19 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 
 main :: IO () 
-main = hspec $ do 
+main = do
   testWhiteSpace
   testBrackets
   testArithmicOperators
   testCompareOperators
-  testBooleanOperators
+  testBoolean
   testNumbers
   testKeywords
   testComments
   testArithmics
 
 -- Test that whitespace is removed 
-testWhiteSpace = 
+testWhiteSpace = hspec $ do 
   describe "Testing if whitespace is remvod properly" $ do 
     it "Nothing at all" $ lexer "" `shouldBe` Right []
     it "Space" $ lexer " " `shouldBe` Right []
@@ -26,14 +26,14 @@ testWhiteSpace =
     it "Tab" $ lexer "\t" `shouldBe` Right []
 
 -- Test that brackets are lexer corretly 
-testBrackets = 
+testBrackets = hspec $ do 
   describe "Testing Brackets and paren" $ do 
     it "Parent" $ lexer "()" `shouldBe` Right [Bracket LeftParen, Bracket RightParen]
     it "Brackets" $ lexer "{}" `shouldBe` Right [Bracket LeftBracket, Bracket RightBracket]
     it "Square brackets" $ lexer "[]" `shouldBe` Right [Bracket LeftSquareBracket, Bracket RightSquareBracket]
 
 -- Test that the arithmic operators are represented correctly
-testArithmicOperators =
+testArithmicOperators = hspec $ do
   describe "Testing the different arithmic operators:" $ do
     it "Addition" $ lexer "+" `shouldBe` Right [Operator Add]
     it "Subtraction" $ lexer "-" `shouldBe` Right [Operator Sub]
@@ -43,7 +43,7 @@ testArithmicOperators =
     it "Assignment" $ lexer "=" `shouldBe` Right [Operator Assignment]
 
 -- Test comparation operators
-testCompareOperators = 
+testCompareOperators = hspec $ do 
   describe "Testing the comparator operators:" $ do 
     it "Equality " $ lexer "==" `shouldBe` Right [Operator Eq]
     it "Not equal " $ lexer "!=" `shouldBe` Right [Operator Ne]
@@ -53,14 +53,22 @@ testCompareOperators =
     it "Greater than or equal " $ lexer ">=" `shouldBe` Right [Operator Ge]
 
 -- Testing Boolean operators
-testBooleanOperators = 
+testBoolean = hspec $ do
+  describe "Testing boolean constants" $ do 
+    it "True" $ lexer "True" `shouldBe` Right [Boolean True]
+    it "False" $ lexer "False" `shouldBe` Right [Boolean False]
   describe "Testing the booloan operators:" $ do 
     it "And" $ lexer "&&" `shouldBe` Right [Operator And]
     it "Or" $ lexer "||" `shouldBe` Right [Operator Or]
     it "Not" $ lexer "!" `shouldBe` Right [Operator Not]
+  describe "Testing boolean expression lexing" $ do 
+    it "True and True" $ lexer "True && True" `shouldBe` Right [Boolean True, Operator And, Boolean True]
+    it "True or False" $ lexer "True || False" `shouldBe` Right [Boolean True, Operator Or, Boolean False]
+    it "Not True" $ lexer "!True" `shouldBe` Right [Operator Not, Boolean True]
+    it "Not False" $ lexer "!False" `shouldBe` Right [Operator Not, Boolean False]
 
 -- Test that numbers are being converted correctly 
-testNumbers = 
+testNumbers = hspec $ do 
   describe "Testing number conversions" $ do 
     it "Integers" $ do
       lexer "10" `shouldBe` Right [Num 10]
@@ -72,7 +80,7 @@ testNumbers =
       lexer "12.34.5" `shouldBe` Left "Could not parse: number contains too many '.'" 
 
 -- Test that the keywords are represented correctly
-testKeywords =
+testKeywords = hspec $ do
   describe "Conveting simple keywords" $ do 
     it "Convert each keyword into its tokenized version" $ do 
       lexer "if" `shouldBe` Right [Keyword If]
@@ -90,14 +98,14 @@ testKeywords =
       lexer "let x = 1 in x" `shouldBe` Right [Keyword Let, Identifier "x", Operator Assignment, Num 1, Keyword In, Identifier "x"]
 
 -- Test that comments are removed
-testComments = 
+testComments = hspec $ do 
   describe "Testing that comments are removed" $ do
     it "Should only return the code, not the comment" $ do
       lexer "-- This is a comment * + \n" `shouldBe` Right []
       lexer "-- This is a comment * + \n3" `shouldBe` Right [Num 3]
 
 -- Test that arithmics are lexed correctly
-testArithmics = 
+testArithmics = hspec $ do 
   describe "Testing the lexing of arithmic strings" $ do 
     it "Testing each operator with numbers" $ do 
       lexer "2 + 3" `shouldBe` Right [Num 2, Operator Add, Num 3]

@@ -4,7 +4,8 @@
 module HandParser (
   parseString,
   parse,
-  parseArithmicString) where 
+  parseArithmicString,
+  parseBooleanString) where 
 
 import HandSyntax
 import HandLexer
@@ -33,9 +34,59 @@ parseLExpr (Keyword If : rest) =
 parseLExpr tokens = parseSExpr tokens
 
 
-parseBExpr :: [Token] -> Either String (Expr, [Token])
-parseBExpr = undefined
+-- The B parser is used for parsing boolean expressions
+-- parseBoolean and parseBooleanString are helper functions to access the sub-language
+parseBoolean :: [Token] -> Either String Program
+parseBoolean tokens = fst `fmap` parseBExpr tokens
 
+parseBooleanString :: String -> Either String Program
+parseBooleanString s = lexer s >>= parseBoolean
+
+parseBCExpr :: [Token] -> Either String (Expr, [Token])
+parseBCExpr (Boolean True : rest) = return (ConstBool True, rest)
+parseBCExpr (Boolean False : rest) = return (ConstBool False, rest)
+parseBCExpr (Identifier x : rest) = return (Var x, rest)
+parseBCExpr (Operator Not : rest) = do 
+  (b, rest') <- parseBCExpr rest
+  return (App (Prim Not) b, rest')
+parseBCExpr (Bracket LeftParen : rest) = 
+  case parseBExpr rest of 
+    Right (expr, Bracket RightParen : rest')  -> return (expr, rest')
+    Right (expr, rest')                       -> Left $ "Parser error: Expected `)` at " ++ (show rest)
+    Left s                                    -> Left s                  
+parseBCExpr rest = Left $ "Parser error: Expecting an boolean constant or expression: " ++ (show rest)
+
+parseBAExpr :: [Token] -> Either String (Expr, [Token])
+parseBAExpr tokens = do
+  ((e : exprs), rest) <- parseBAExpr' tokens  
+  return (foldl (applyOperator And) e exprs, rest) 
+  where 
+    parseBAExpr' :: [Token] -> Either String ([Expr], [Token]) 
+    parseBAExpr' tokens = do
+      case parseBCExpr tokens of 
+        Right (expr, Operator And : rest')  -> do 
+          (exprs, rest'') <- parseBAExpr' rest'
+          return (expr : exprs, rest'')
+        Right (expr, rest')                 -> Right ([expr], rest')
+        Left s                              -> Left s
+
+parseBExpr :: [Token] -> Either String (Expr, [Token])
+parseBExpr tokens = do
+  ((e : exprs), rest) <- parseBExpr' tokens  
+  return (foldl (applyOperator Or) e exprs, rest) 
+  where 
+    parseBExpr' :: [Token] -> Either String ([Expr], [Token]) 
+    parseBExpr' tokens = do
+      case parseBAExpr tokens of 
+        Right (expr, Operator Or : rest')   -> do 
+          (exprs, rest'') <- parseBExpr' rest'
+          return (expr : exprs, rest'')
+        Right (expr, rest')                 -> Right ([expr], rest')
+        Left s                              -> Left s
+
+
+
+-- Parsing the arithmic language 
 -- Parser functions to only parse arithmics
 parseArithmicString :: String -> Either String Program
 parseArithmicString s = lexer s >>= parseArithmic 

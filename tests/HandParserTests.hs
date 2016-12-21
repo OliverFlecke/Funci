@@ -7,13 +7,13 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 
 main :: IO ()
-main = hspec $ do 
+main = do 
   testArithmics
-  testVariableArithmics
+  testBooleans
   testLetExpressions
 
 -- Testing all the arithmic operations
-testArithmics =
+testArithmics = hspec $ do 
   describe "Simple arithmic operations" $ do 
     it "is testing simple addition operations" $ do 
       parseArithmicString "2 + 3" `shouldBe` Right (App (App (Prim Add) (Const 2)) (Const 3))
@@ -40,14 +40,35 @@ testArithmics =
     it "is testing interleaving multiplcation and division operations" $ do 
       parseArithmicString "1 * 2 / 3" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Mul) (Const 1)) (Const 2))) (Const 3))
       parseArithmicString "1 / 2 * 3" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Div) (Const 1)) (Const 2))) (Const 3))
-testVariableArithmics = 
   describe "Arithmics with variables" $ do 
     it "Addition" $       parseArithmicString "x + y" `shouldBe` Right (App (App (Prim Add) (Var "x")) (Var "y"))
     it "Subtraction" $    parseArithmicString "x - y" `shouldBe` Right (App (App (Prim Sub) (Var "x")) (Var "y"))
     it "Multiplcation" $  parseArithmicString "x * y" `shouldBe` Right (App (App (Prim Mul) (Var "x")) (Var "y"))
     it "Division" $       parseArithmicString "x / y" `shouldBe` Right (App (App (Prim Div) (Var "x")) (Var "y"))
 
-testLetExpressions = 
+-- Testing booleans
+testBooleans = hspec $ do 
+  describe "Testing simple constants:" $ do 
+    it "True" $ parseBooleanString "True" `shouldBe` Right (ConstBool True)
+    it "False" $ parseBooleanString "False" `shouldBe` Right (ConstBool False)
+    it "Variable" $ parseBooleanString "x" `shouldBe` Right (Var "x")
+    it "Parentesics" $ parseBooleanString "(True)" `shouldBe` Right (ConstBool True)
+  describe "Testing simple expressions:" $ do 
+    it "And" $ parseBooleanString "True && False" `shouldBe` Right (App (App (Prim And) (ConstBool True)) (ConstBool False))
+    it "Or" $ parseBooleanString "True || False" `shouldBe` Right (App (App (Prim Or) (ConstBool True)) (ConstBool False)) 
+    it "Not" $ parseBooleanString "!True" `shouldBe` Right (App (Prim Not) (ConstBool True))
+  describe "Testing mulitple operators after each other:" $ do
+    it "Multiple Ands" $ parseBooleanString "True && False && True" `shouldBe` Right (App (App (Prim And) (App (App (Prim And) (ConstBool True)) (ConstBool False))) (ConstBool True))
+    it "Multiple Ors" $ parseBooleanString "True || False || True" `shouldBe` Right (App (App (Prim Or) (App (App (Prim Or) (ConstBool True)) (ConstBool False))) (ConstBool True))
+  describe "Testing precedence with interleaving And, Or, and Not operators:" $ do 
+    it "T && F || T" $ parseBooleanString "True && False || True" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (ConstBool True)) (ConstBool False))) (ConstBool True))
+    it "T || T && F" $ parseBooleanString "True || True && False" `shouldBe` Right (App (App (Prim Or) (ConstBool True)) (App (App (Prim And) (ConstBool True)) (ConstBool False)))
+    it "-T && T" $ parseBooleanString "!True && True" `shouldBe` Right (App (App (Prim And) (App (Prim Not) (ConstBool True))) (ConstBool True))
+    it "-F || F" $ parseBooleanString "!False || False" `shouldBe` Right (App (App (Prim Or) (App (Prim Not) (ConstBool False))) (ConstBool False))
+    it "-F && T || F" $ parseBooleanString "!False && True || False" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (App (Prim Not) (ConstBool False))) (ConstBool True))) (ConstBool False))
+    it "-(F && T)" $ parseBooleanString "!(False && True)" `shouldBe` Right (App (Prim Not) (App (App (Prim And) (ConstBool False)) (ConstBool True)))
+
+testLetExpressions = hspec $ do
   describe "Testing let expressions" $ do 
     it "Single variable let expressions" $ do 
       parseString "let x = 1 in x" `shouldBe` Right (LetIn "x" (Const 1) (Var "x"))

@@ -7,6 +7,13 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+### 0.1.0.6  -- 2016-12-21
+* Boolean language support added 
+** Lexing boolean constants 
+** Parsing boolean constants
+** Parsing boolean expressions with And, Or, and Not operator
+* Let expressions are now handled by the parser
+
 ### 0.1.0.5  -- 2016-12-21 
 * Added Comparator and boolean operators to the syntax of the language
 * Added tests for lexing comparator operators 
