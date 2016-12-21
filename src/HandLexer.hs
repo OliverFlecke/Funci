@@ -17,8 +17,8 @@ lexer ('\t':cs) = lexer cs
 
 -- Remove comments
 lexer ('-':'-':cs) = 
-    let (_, cs') = break (\c -> c == '\n') cs -- Rewrite this inline function please...
-    in lexer cs'
+  let (_, cs') = break (\c -> c == '\n') cs -- Rewrite this inline function please...
+  in lexer cs'
 
 -- Not sure if I want to have semicolons in the language
 lexer (';':cs) = addToken Semicolon cs
@@ -53,35 +53,35 @@ lexer ('=':cs) = addToken (Operator Assignment) cs
 
 -- Find digits in the string 
 lexer (c : cs) | isDigit c = 
-    let (digits, cs') = break (not . isDigitOrDot) $ c:cs
-    in if countDots digits <= 1 
-        then addToken (Num (read digits)) cs'
-        else Left "Could not parse: number contains too many '.'"
-    where 
-        isDigitOrDot :: Char -> Bool 
-        isDigitOrDot c = isDigit c || c == '.'
-        countDots :: [Char] -> Int
-        countDots = length . filter (\d -> d == '.')
+  let (digits, cs') = break (not . isDigitOrDot) $ c:cs
+  in if countDots digits <= 1 
+    then addToken (Num (read digits)) cs'
+    else Left "Could not parse: number contains too many '.'"
+  where 
+    isDigitOrDot :: Char -> Bool 
+    isDigitOrDot c = isDigit c || c == '.'
+    countDots :: [Char] -> Int
+    countDots = length . filter (\d -> d == '.')
 
 -- Find names in the string
 lexer (c : cs) | isLetter c = 
-    let (id, cs') = break (not . isLetter) $ c:cs
-    in addToken (toIdOrKeyword id) cs'
-    where
-        toIdOrKeyword :: String -> Token
-        toIdOrKeyword s 
-            | s == "if"     = Keyword If 
-            | s == "then"   = Keyword Then 
-            | s == "else"   = Keyword Else 
-            | s == "case"   = Keyword Case 
-            | s == "of"     = Keyword Of 
-            | s == "let"    = Keyword Let 
-            | s == "in"     = Keyword In 
-            | s == "where"  = Keyword Where 
-            | otherwise     = Identifier s
+  let (id, cs') = break (not . isLetter) $ c:cs
+  in addToken (toIdOrKeyword id) cs'
+  where
+    toIdOrKeyword :: String -> Token
+    toIdOrKeyword s 
+      | s == "if"     = Keyword If 
+      | s == "then"   = Keyword Then 
+      | s == "else"   = Keyword Else 
+      | s == "case"   = Keyword Case 
+      | s == "of"     = Keyword Of 
+      | s == "let"    = Keyword Let 
+      | s == "in"     = Keyword In 
+      | s == "where"  = Keyword Where 
+      | otherwise     = Identifier s
 
 -- Error handling 
 -- Is it possible to get a line and/or column number 
 lexer s = Left $ "Unexpected character: \t" ++ s 
-            ++ "\n                      \t^"
+      ++ "\n                      \t^"
 

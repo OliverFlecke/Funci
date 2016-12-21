@@ -23,7 +23,8 @@ data Expr =
     | Var Id 
     | Prim Operator
     | App Expr Expr 
-    -- | If Expr Expr Expr 
+    | LetIn Id Expr Expr 
+    | IfThenElse Expr Expr Expr 
     deriving (Show, Eq)
 
 data Keywords = 
