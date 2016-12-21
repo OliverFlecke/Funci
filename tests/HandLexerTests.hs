@@ -11,11 +11,13 @@ main = do
   testBrackets
   testArithmicOperators
   testCompareOperators
+  testListOperators
   testBoolean
   testNumbers
   testKeywords
   testComments
   testArithmics
+  -- testLists
 
 -- Test that whitespace is removed 
 testWhiteSpace = hspec $ do 
@@ -51,6 +53,14 @@ testCompareOperators = hspec $ do
     it "Greater than " $ lexer ">" `shouldBe` Right [Operator Gt]
     it "Less than or equal " $ lexer "<=" `shouldBe` Right [Operator Le]
     it "Greater than or equal " $ lexer ">=" `shouldBe` Right [Operator Ge]
+
+-- Testing list operators
+testListOperators = hspec $ do 
+  describe "Testing list operators:" $ do 
+    it "Head" $ lexer "head" `shouldBe` Right [Operator Head]
+    it "Tail" $ lexer "tail" `shouldBe` Right [Operator Tail]
+    it "ListCons" $ lexer ":" `shouldBe` Right [Operator ListCons]
+    it "Comma" $ lexer "," `shouldBe` Right [Operator Comma]
 
 -- Testing Boolean operators
 testBoolean = hspec $ do
@@ -122,3 +132,8 @@ testArithmics = hspec $ do
       lexer "1 + 2.3" `shouldBe` Right [Num 1, Operator Add, Num 2.3]
       lexer "1.2 + 3.4" `shouldBe` Right [Num 1.2, Operator Add, Num 3.4]
       lexer "1.2 * 3.4" `shouldBe` Right [Num 1.2, Operator Mul, Num 3.4]
+
+-- testLists = hspec $ do 
+--   describe "Testing basic list construction:" $ do 
+--     -- it "The empty list" $ lexer "[]" `shouldBe` Right []
+--     it

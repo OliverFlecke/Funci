@@ -10,6 +10,7 @@ main :: IO ()
 main = do 
   testArithmics
   testBooleans
+  testLists
   testLetExpressions
 
 -- Testing all the arithmic operations
@@ -67,6 +68,16 @@ testBooleans = hspec $ do
     it "-F || F" $ parseBooleanString "!False || False" `shouldBe` Right (App (App (Prim Or) (App (Prim Not) (ConstBool False))) (ConstBool False))
     it "-F && T || F" $ parseBooleanString "!False && True || False" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (App (Prim Not) (ConstBool False))) (ConstBool True))) (ConstBool False))
     it "-(F && T)" $ parseBooleanString "!(False && True)" `shouldBe` Right (App (Prim Not) (App (App (Prim And) (ConstBool False)) (ConstBool True)))
+
+testLists = hspec $ do 
+  describe "Testing simple list construction:" $ do
+    it "Empty" $ parseListString "[]" `shouldBe` Right (ConstList Empty)
+    it "One int" $ parseListString "1 : []" `shouldBe` Right (ConstList (Cons 1 Empty))
+    it "Two numbers" $ parseListString "1 : 2 : []" `shouldBe` Right (ConstList (Cons 1 (Cons 2 Empty)))
+    it "Invalid syntax with empty list in the middle" $ parseListString "1 : [] : 2" `shouldBe` Left "Parser error: Unable to construct list"
+  describe "Testing list constructing with commas" $ do 
+    it "Just one number" $ parseListString "[1]" `shouldBe` Right (ConstList (Cons 1 Empty))
+    it "Three numbers" $ parseListString "[1,2,3]" `shouldBe` Right (ConstList (Cons 1 (Cons 2 (Cons 3 Empty))))
 
 testLetExpressions = hspec $ do
   describe "Testing let expressions" $ do 

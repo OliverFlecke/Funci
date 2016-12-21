@@ -5,7 +5,8 @@ module HandParser (
   parseString,
   parse,
   parseArithmicString,
-  parseBooleanString) where 
+  parseBooleanString,
+  parseListString) where 
 
 import HandSyntax
 import HandLexer
@@ -33,6 +34,32 @@ parseLExpr (Keyword If : rest) =
 
 parseLExpr tokens = parseSExpr tokens
 
+-- Handling lists
+parseListString :: String -> Either String Program
+parseListString s = do 
+  (e, rest) <- (lexer s >>= parseList)
+  if rest == [] -- This is not good enough
+    then Right e 
+    else Left "Program not done"
+
+parseList :: [Token] -> Either String (Expr, [Token])
+parseList (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = Right (ConstList Empty, rest)
+parseList (Num n : Operator ListCons : rest) = 
+  case parseList rest of 
+    Right (ConstList l, rest')  -> Right (ConstList (Cons n l), rest')
+    Right (e, rest')            -> Left $ "Parser error: Unable to construct list" ++ (show rest)
+    Left s                      -> Left s
+parseList (Bracket LeftSquareBracket : Num n : rest) =
+  case parseList' rest of 
+    Right (ConstList l, rest')  -> Right (ConstList (Cons n l), rest')
+    Left s                      -> Left s
+  where 
+    parseList' :: [Token] -> Either String (Expr, [Token])
+    parseList' (Bracket RightSquareBracket : rest) = Right $ (ConstList Empty, rest)
+    parseList' (Operator Comma : Num n : rest) = do 
+      (ConstList l, rest') <- parseList' rest
+      Right (ConstList (Cons n l), rest')
+    parseList' t = Left $ "Parser error: Unable to construct list" ++ (show t)
 
 -- The B parser is used for parsing boolean expressions
 -- parseBoolean and parseBooleanString are helper functions to access the sub-language

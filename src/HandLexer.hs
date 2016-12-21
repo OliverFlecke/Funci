@@ -50,6 +50,12 @@ lexer ('/':cs) = addToken (Operator Div) cs
 lexer ('%':cs) = addToken (Operator Rem) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
 
+lexer ('h':'e':'a':'d':cs) = addToken (Operator Head) cs
+lexer ('t':'a':'i':'l':cs) = addToken (Operator Tail) cs
+lexer (':':cs) = addToken (Operator ListCons) cs
+
+lexer (',':cs) = addToken (Operator Comma) cs
+
 -- Find boolean values
 lexer ('T':'r':'u':'e' : cs) = addToken (Boolean True) cs
 lexer ('F':'a':'l':'s':'e' : cs) = addToken (Boolean False) cs

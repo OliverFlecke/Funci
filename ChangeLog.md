@@ -11,13 +11,18 @@
 - [ ] Implement the HandParser
     - [x] Implement the arithmic language for the parser
     - [x] Implement the boolean language for the parser
-    - [ ] Implement support for lists
+    - [x] Implement support for lists with numbers
+        - [ ] Upgrade this to support lists of any type
     - [x] Implement let expressions
     - [ ] Implement if then else expressions
     - [ ] Implement case expressions
+- [ ] Write documentation about how the language actually works
 
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
+
+### 0.1.0.7  -- 2016-12-21
+* Support for list of numbers added
 
 ### 0.1.0.6  -- 2016-12-21
 * Boolean language support added 

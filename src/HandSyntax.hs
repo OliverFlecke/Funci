@@ -5,6 +5,11 @@ type Program = Expr
 --     deriving (Read, Show, Eq)
 
 type Id = String 
+-- data Value = 
+--     Int 
+--     | Float 
+--     | Bool
+--     deriving (Show, Eq)
 
 -- Tokens which the input can be transformed into
 data Token = 
@@ -17,11 +22,14 @@ data Token =
     | Semicolon 
     deriving (Show, Eq)
 
+data List = Empty | Cons Float List deriving (Show, Eq)
+
 -- And this is what the parser should output 
 -- (eventually turned into a valid program)
 data Expr = 
     Const Float
     | ConstBool Bool
+    | ConstList List    
     | Var Id 
     | Prim Operator
     | App Expr Expr 
@@ -40,9 +48,9 @@ data Operator =
     Add | Sub | Mul | Div | Rem
     | Gt | Ge | Lt | Le | Eq | Ne
     | And | Or | Not  
-    | Head | Tail 
+    | Head | Tail | ListCons
+    | Comma
     | Assignment 
-    -- | Null
     deriving (Show, Eq)
 
 data Brackets = 
