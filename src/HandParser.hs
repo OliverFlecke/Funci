@@ -3,7 +3,8 @@
 -- representation of the program
 module HandParser (
     parseString,
-    parse) where 
+    parse,
+    parseArithmicString) where 
 
 import HandSyntax
 import HandLexer
@@ -12,7 +13,13 @@ parseString :: String -> Either String Program
 parseString s = lexer s >>= parse
 
 parse :: [Token] -> Either String Program
-parse tokens = fmap fst $ parseSExpr tokens
+parse tokens = fst `fmap` parseSExpr tokens
+
+parseArithmicString :: String -> Either String Program
+parseArithmicString s = lexer s >>= parseArithmic 
+
+parseArithmic :: [Token] -> Either String Program
+parseArithmic tokens = fst `fmap` parseSExpr tokens
 
 -- The F, P, and S expression are used to handle the basic alrithmic operations
 -- F expressions
@@ -21,8 +28,9 @@ parseFExpr (Num i : rest) = return (Const i, rest)
 parseFExpr (Bracket RightParen : rest) = 
     case parseSExpr rest of 
         Right (expr, Bracket LeftParen : rest') -> return (expr, rest')
-        _                                       -> Left $ "Parse error: Expected `)`"
-parseFExpr tokens = Left $ "Parse error: Expecting a number or an `(`"
+        Right (expr, rest')                     -> Left $ "Parse error: Expected `)` at " ++ (show rest)
+        Left s                                  -> Left s
+parseFExpr tokens = Left $ "Parse error: Expecting a number or an `(` at " ++ (show tokens)
 
 -- P expressions
 parsePExpr :: [Token] -> Either String (Expr, [Token])

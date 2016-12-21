@@ -7,6 +7,14 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+### 0.1.0.5  -- 2016-12-21 
+* Added Comparator and boolean operators to the syntax of the language
+* Added tests for lexing comparator operators 
+* Added functionallity for lexing comparator operators
+* Added test for lexer boolean operators 
+* Added functionallity for lexing boolean operators
+* Made an explicit function in the parser for only parsing arithmic strings
+
 ### 0.1.0.4  -- 2016-12-20
 * Renamed the arithmic operators abstract representation, so they all have the same length (so it is now called Add instead of Plus and so on).
 * All the definitions of the syntax has now been moved to the new file \src\HandSyntax.hs

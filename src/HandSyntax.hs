@@ -35,10 +35,11 @@ data Keywords =
 
 data Operator = 
     Add | Sub | Mul | Div | Rem
-    | Gt | Ge | Lt | Le | Eq | Ne  
+    | Gt | Ge | Lt | Le | Eq | Ne
+    | And | Or | Not  
     | Head | Tail 
     | Assignment 
-    | Null
+    -- | Null
     deriving (Show, Eq)
 
 data Brackets = 

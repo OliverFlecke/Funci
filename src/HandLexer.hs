@@ -32,12 +32,24 @@ lexer ('{':cs) = addToken (Bracket LeftBracket) cs
 lexer ('}':cs) = addToken (Bracket RightBracket) cs 
 
 -- Handing operators
+lexer ('=':'=':cs) = addToken (Operator Eq) cs
+lexer ('!':'=':cs) = addToken (Operator Ne) cs
+lexer ('<':'=':cs) = addToken (Operator Le) cs
+lexer ('>':'=':cs) = addToken (Operator Ge) cs
+lexer ('<':cs) = addToken (Operator Lt) cs
+lexer ('>':cs) = addToken (Operator Gt) cs
+
+lexer ('&':'&':cs) = addToken (Operator And) cs
+lexer ('|':'|':cs) = addToken (Operator Or) cs
+lexer ('!':cs) = addToken (Operator Not) cs
+
 lexer ('+':cs) = addToken (Operator Add) cs
 lexer ('-':cs) = addToken (Operator Sub) cs
 lexer ('*':cs) = addToken (Operator Mul) cs
 lexer ('/':cs) = addToken (Operator Div) cs
 lexer ('%':cs) = addToken (Operator Rem) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
+
 
 -- Find digits in the string 
 lexer (c : cs) | isDigit c = 
