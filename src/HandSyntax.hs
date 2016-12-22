@@ -4,6 +4,15 @@ type Program = Expr
 -- data Bind = Bind Id Type [Id] Exp
 --     deriving (Read, Show, Eq)
 
+data NumType = Int Int 
+    | Float Float 
+    deriving (Show, Eq)
+
+data Type = 
+    Number NumType
+    | Bool Bool
+    | ConstList (List Type)
+    deriving (Show, Eq)
 type Id = String 
 -- data Value = 
 --     Int 
@@ -13,7 +22,7 @@ type Id = String
 
 -- Tokens which the input can be transformed into
 data Token = 
-    Num Float  -- How do I get two different tokens for ints and floats?
+    Num NumType  -- How do I get two different tokens for ints and floats?
     | Boolean Bool
     | Keyword Keywords 
     | Operator Operator 
@@ -22,14 +31,14 @@ data Token =
     | Semicolon 
     deriving (Show, Eq)
 
-data List = Empty | Cons Float List deriving (Show, Eq)
+data List a = Empty | Cons a (List a) deriving (Show, Eq)
 
 -- And this is what the parser should output 
 -- (eventually turned into a valid program)
 data Expr = 
-    Const Float
-    | ConstBool Bool
-    | ConstList List    
+    Const Type
+    -- | ConstBool Bool
+    -- | ConstList List    
     | Var Id 
     | Prim Operator
     | App Expr Expr 

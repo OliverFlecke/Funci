@@ -63,9 +63,10 @@ lexer ('F':'a':'l':'s':'e' : cs) = addToken (Boolean False) cs
 -- Find digits in the string 
 lexer (c : cs) | isDigit c = 
   let (digits, cs') = break (not . isDigitOrDot) $ c:cs
-  in if countDots digits <= 1 
-    then addToken (Num (read digits)) cs'
-    else Left "Could not parse: number contains too many '.'"
+  in case countDots digits of 
+    0 -> addToken (Num (Int (read digits))) cs'
+    1 -> addToken (Num (Float (read digits))) cs'
+    _ -> Left "Could not parse: number contains too many '.'"
   where 
     isDigitOrDot :: Char -> Bool 
     isDigitOrDot c = isDigit c || c == '.'

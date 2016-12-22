@@ -21,6 +21,10 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+### 0.1.0.8  -- 2016-12-22
+* List made generic - They are at the moment a bit to generic, as one list can contain multiple types, which should not be allowed.
+* Rewrite of the syntax - Hopefully this can be cleaned up a bit
+
 ### 0.1.0.7  -- 2016-12-21
 * Support for list of numbers added
 

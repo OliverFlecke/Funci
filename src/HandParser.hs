@@ -29,7 +29,7 @@ parseLExpr (Keyword If : rest) =
   case parseBExpr rest of 
     Left s        -> Left s
     Right (b, Keyword Then : rest') -> do 
-      return $ (IfThenElse b (Const 0) (Const 0), rest') -- Not working !!!
+      return $ (IfThenElse b (Const (Number (Float 0))) (Const (Number (Float 0))), rest') -- Not working !!!
     _                               -> Left $ "Parser error: If then else something"
 
 parseLExpr tokens = parseSExpr tokens
@@ -43,22 +43,30 @@ parseListString s = do
     else Left "Program not done"
 
 parseList :: [Token] -> Either String (Expr, [Token])
-parseList (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = Right (ConstList Empty, rest)
-parseList (Num n : Operator ListCons : rest) = 
+parseList (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = Right (Const (ConstList Empty), rest)
+parseList (t : Operator ListCons : rest) = 
   case parseList rest of 
-    Right (ConstList l, rest')  -> Right (ConstList (Cons n l), rest')
-    Right (e, rest')            -> Left $ "Parser error: Unable to construct list" ++ (show rest)
-    Left s                      -> Left s
-parseList (Bracket LeftSquareBracket : Num n : rest) =
+    Right (Const (ConstList l), rest')  -> 
+      case t of 
+        Num n     -> Right (Const $ ConstList (Cons (Number n) l), rest')
+        Boolean b -> Right (Const $ ConstList (Cons (Bool b) l), rest')
+        _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
+    Right (e, rest')                    -> Left $ "Parser error: Unable to construct list" ++ (show rest)
+    Left s                              -> Left s
+parseList (Bracket LeftSquareBracket : t : rest) =
   case parseList' rest of 
-    Right (ConstList l, rest')  -> Right (ConstList (Cons n l), rest')
-    Left s                      -> Left s
+    Left s                              -> Left s
+    Right (Const (ConstList l), rest')  -> 
+      case t of 
+        Num n     -> Right (Const $ ConstList (Cons (Number n) l), rest')
+        Boolean b -> Right (Const $ ConstList (Cons (Bool b) l), rest')
+        _         -> Left $ "Parser error: Unable to construct list"
   where 
     parseList' :: [Token] -> Either String (Expr, [Token])
-    parseList' (Bracket RightSquareBracket : rest) = Right $ (ConstList Empty, rest)
+    parseList' (Bracket RightSquareBracket : rest) = Right $ (Const $ ConstList Empty, rest)
     parseList' (Operator Comma : Num n : rest) = do 
-      (ConstList l, rest') <- parseList' rest
-      Right (ConstList (Cons n l), rest')
+      (Const (ConstList l), rest') <- parseList' rest
+      Right (Const (ConstList (Cons (Number n) l)), rest')
     parseList' t = Left $ "Parser error: Unable to construct list" ++ (show t)
 
 -- The B parser is used for parsing boolean expressions
@@ -70,8 +78,8 @@ parseBooleanString :: String -> Either String Program
 parseBooleanString s = lexer s >>= parseBoolean
 
 parseBCExpr :: [Token] -> Either String (Expr, [Token])
-parseBCExpr (Boolean True : rest) = return (ConstBool True, rest)
-parseBCExpr (Boolean False : rest) = return (ConstBool False, rest)
+parseBCExpr (Boolean True : rest) = return (Const (Bool True), rest)
+parseBCExpr (Boolean False : rest) = return (Const (Bool False), rest)
 parseBCExpr (Identifier x : rest) = return (Var x, rest)
 parseBCExpr (Operator Not : rest) = do 
   (b, rest') <- parseBCExpr rest
@@ -124,7 +132,8 @@ parseArithmic tokens = fst `fmap` parseSExpr tokens
 -- The F, P, and S expression are used to handle the basic alrithmic operations
 -- F expressions
 parseFExpr :: [Token] -> Either String (Expr, [Token])
-parseFExpr (Num i : rest) = return (Const i, rest)
+parseFExpr (Num (Int i) : rest) = return (Const (Number (Int i)), rest)
+parseFExpr (Num (Float n) : rest) = return (Const (Number (Float n)), rest)
 parseFExpr (Identifier x : rest) = return (Var x, rest)
 parseFExpr (Bracket RightParen : rest) = 
   case parseSExpr rest of 
@@ -146,7 +155,8 @@ parsePExpr tokens = do
         Right (expr, Operator Div : rest')  -> do
           (exprs, rt, ops) <- parsePExpr' rest' 
           case exprs of -- Handling divide by zero
-            (Const 0:xs)  -> Left "Arithmic error: Divide by zero"
+            (Const (Number (Float 0)):xs)   -> Left "Arithmic error: Divide by zero"
+            (Const (Number (Int 0)):xs)   -> Left "Arithmic error: Divide by zero"
             _             -> return (expr : exprs, rt, Div : ops)
         Right (expr', rest')                -> return ([expr'], rest', [Mul])
         Left s                              -> Left s
