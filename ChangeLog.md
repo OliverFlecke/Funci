@@ -22,9 +22,12 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.0.11 -- 2016-12-27 
+* Let statements can now handle multiple assignments in one 
+
 #### 0.1.0.10 -- 2016-12-27
 * Support for if-then-else expressions added
-* Undid types in list, so list now can contain multiple types, as this should be done when typechecking instead.
+* Undid types in list, so list now can contain multiple types, as this should be done when typechecking instead.    
 
 #### 0.1.0.9  -- 2016-12-27
 * Added functionallity to parse basic functions, such as a main function

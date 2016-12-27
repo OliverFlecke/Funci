@@ -31,12 +31,25 @@ parseExpressionsString :: String -> Either String Expr
 parseExpressionsString s = lexer s >>= (\t -> fst `fmap` parseExpressions t)
 
 parseExpressions :: [Token] -> Either String (Expr, [Token])
-parseExpressions (Keyword Let : Identifier x : Operator Assignment : rest) =
-  case parseBasic rest of 
-    Right (e1, Keyword In : rest')  -> do 
-      (e2, rest'') <- parseBasic rest' 
-      return $ (LetIn x e1 e2, rest'')
-    _                               -> Left $ "Parser error: Expecting 'in' in let expression: " ++ (show rest)
+parseExpressions (Keyword Let : rest) = parseLet rest
+  -- case parseBasic rest of 
+  --   Right (e, Keyword In : rest')  -> do 
+  --     (body, rest'') <- parseBasic rest' 
+  --     return $ (LetIn [(x, e)] body, rest'')
+  --   _                               -> Left $ "Parser error: Expecting 'in' in let expression: " ++ (show rest)
+  where 
+    parseLet :: [Token] -> Either String (Expr, [Token])
+    parseLet (Identifier x : Operator Assignment : rest) = 
+      case parseBasic rest of 
+        Right (e, Keyword In : rest')     -> do 
+          (body, rest'') <- parseBasic rest' 
+          return $ (LetIn [(x, e)] body, rest'')
+        Right (e, Operator Comma : rest') -> do 
+          (LetIn xs body, rest'') <- parseLet rest' 
+          return $ (LetIn ((x, e):xs) body, rest)
+        Left s                            -> Left s
+
+-- Parsing if expressions
 parseExpressions (Keyword If : rest) = 
   case parseBoolean rest of 
     Left s                          -> Left s
@@ -106,7 +119,7 @@ parseList (Bracket LeftSquareBracket : t : rest) =
 --   case parseBasic t of 
 --     Right (e, Operator ListCons : rest) -> do 
 --       case parseList rest of 
-         
+
 --     Right et                            -> return $ et
 --     Left s                              -> Left s
 

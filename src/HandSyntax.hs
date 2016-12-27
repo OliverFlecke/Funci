@@ -54,7 +54,7 @@ data Expr =
   | Var Id 
   | Prim Operator
   | App Expr Expr 
-  | LetIn Id Expr Expr 
+  | LetIn [(Id,Expr)] Expr 
   | IfThenElse Expr Expr Expr 
   deriving (Read, Show, Eq, Ord)
 

@@ -93,11 +93,15 @@ testLists = hspec $ do
 testLet = hspec $ do
   describe "Testing let expressions" $ do 
     it "Single variable let expressions with number" $ do 
-      parseExpressionsString "let x = 1 in x" `shouldBe` Right (LetIn "x" (Const (Number (Integer 1))) (Var "x"))
-      parseExpressionsString "let x = 1 + 1 in x" `shouldBe` Right (LetIn "x" (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 1)))) (Var "x"))
-      parseExpressionsString "let x = 1 in x * x" `shouldBe` Right (LetIn "x" (Const (Number (Integer 1))) (App (App (Prim Mul) (Var "x")) (Var "x")))
+      parseExpressionsString "let x = 1 in x" `shouldBe` Right (LetIn [("x", (Const (Number (Integer 1))))] (Var "x"))
+      parseExpressionsString "let x = 1 + 1 in x" `shouldBe` Right (LetIn [("x", (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 1)))))] (Var "x"))
+      parseExpressionsString "let x = 1 in x * x" `shouldBe` Right (LetIn [("x", (Const (Number (Integer 1))))] (App (App (Prim Mul) (Var "x")) (Var "x")))
     it "Single variable let expressions with booleans" $ do 
-      parseExpressionsString "let x = True in x" `shouldBe` Right (LetIn "x" (Const (Boole True)) (Var "x"))
+      parseExpressionsString "let x = True in x" `shouldBe` Right (LetIn [("x", (Const (Boole True)))] (Var "x"))
+  describe "Multiple variables let expressions" $ do 
+    it "Testing numbers and boolean" $ do 
+      parseExpressionsString "let x = 1, y = 2 in x + y" `shouldBe` Right (LetIn [("x", (Const (Number (Integer 1)))), ("y", (Const (Number (Integer 2))))] (App (App (Prim Add) (Var "x")) (Var "y")))
+      parseExpressionsString "let x = 1, y = True in y" `shouldBe` Right (LetIn [("x", (Const (Number (Integer 1)))), ("y", (Const (Boole True)))] (Var "y"))
 
 testIfThenElse = hspec $ do 
   describe "Testing simple if then else expressions" $ do
@@ -108,8 +112,8 @@ testIfThenElse = hspec $ do
 
 testExpressions = hspec $ do 
   describe "Testing interleaving if-then-else and let expressions" $ do 
-    it "If t then let x = 1 in x else 0" $ parseExpressionsString "if True then let x = 1 in x else 0" `shouldBe` Right (IfThenElse (Const (Boole True)) (LetIn "x" (Const (Number (Integer 1))) (Var "x")) (Const (Number (Integer 0))))
-    it "If t then 0 else let x = 1 in x" $ parseExpressionsString "if True then 0 else let x = 1 in x" `shouldBe` Right (IfThenElse (Const (Boole True)) (Const (Number (Integer 0))) (LetIn "x" (Const (Number (Integer 1))) (Var "x")))
+    it "If t then let x = 1 in x else 0" $ parseExpressionsString "if True then let x = 1 in x else 0" `shouldBe` Right (IfThenElse (Const (Boole True)) (LetIn [("x", (Const (Number (Integer 1))))] (Var "x")) (Const (Number (Integer 0))))
+    it "If t then 0 else let x = 1 in x" $ parseExpressionsString "if True then 0 else let x = 1 in x" `shouldBe` Right (IfThenElse (Const (Boole True)) (Const (Number (Integer 0))) (LetIn [("x", (Const (Number (Integer 1))))] (Var "x")))
 
 testMainFunction = hspec $ do 
   describe "Testing a simple starting point for a program" $ do 
@@ -118,4 +122,4 @@ testMainFunction = hspec $ do
     it "Main with boolean" $ parseString "main = True" `shouldBe` Right [Bind "main" Nothing [] (Const (Boole True))] 
     it "Main with boolean expression" $ parseString "main = True || False" `shouldBe` Right [Bind "main" Nothing [] (App (App (Prim Or) (Const (Boole True))) (Const (Boole False)))]
   describe "Testing with expressions inside the main function" $ do 
-    it "With let expression" $ parseString "main = let x = 1 in x" `shouldBe` Right [Bind "main" Nothing [] (LetIn "x" (Const (Number (Integer 1))) (Var "x"))]
+    it "With let expression" $ parseString "main = let x = 1 in x" `shouldBe` Right [Bind "main" Nothing [] (LetIn [("x", (Const (Number (Integer 1))))] (Var "x"))]
