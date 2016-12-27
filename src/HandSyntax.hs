@@ -1,69 +1,81 @@
 module HandSyntax where
 
-type Program = Expr
--- data Bind = Bind Id Type [Id] Exp
---     deriving (Read, Show, Eq)
+type Program = [Bind] 
+type Id = String 
 
-data NumType = Int Int 
-    | Float Float 
-    deriving (Show, Eq)
+data Bind = Bind Id (Maybe QType) [Id] Expr
+  deriving (Read, Show, Eq, Ord)
+
+data NumType = Integer Int 
+  | Floating Float 
+  deriving (Read, Show, Eq, Ord)
 
 data Type = 
-    Number NumType
-    | Bool Bool
-    | ConstList (List Type)
-    deriving (Show, Eq)
-type Id = String 
--- data Value = 
---     Int 
---     | Float 
---     | Bool
---     deriving (Show, Eq)
+  Number NumType
+  | Boole Bool
+  | ConstList (List Type)
+  deriving (Read, Show, Eq, Ord)
+
+data QType = Forall Id QType
+            | Ty FType 
+            deriving (Read, Show, Eq, Ord)
+
+data FType =  Arrow FType FType
+            | Prod FType FType
+            | Sum FType FType
+            | Base BaseType
+            | TypeVar Id 
+            deriving (Read, Show, Eq, Ord)
+
+data BaseType = Unit
+              | Int 
+              | Float
+              | Bool 
+              deriving (Read, Show, Eq, Ord)
+
 
 -- Tokens which the input can be transformed into
 data Token = 
-    Num NumType  -- How do I get two different tokens for ints and floats?
-    | Boolean Bool
-    | Keyword Keywords 
-    | Operator Operator 
-    | Identifier Id 
-    | Bracket Brackets
-    | Semicolon 
-    deriving (Show, Eq)
+  Num NumType 
+  | Boolean Bool
+  | Keyword Keywords 
+  | Operator Operator 
+  | Identifier Id 
+  | Bracket Brackets
+  | Semicolon 
+  deriving (Read, Show, Eq, Ord)
 
-data List a = Empty | Cons a (List a) deriving (Show, Eq)
+data List a = Empty | Cons a (List a) deriving (Read, Show, Eq, Ord)
 
 -- And this is what the parser should output 
 -- (eventually turned into a valid program)
 data Expr = 
-    Const Type
-    -- | ConstBool Bool
-    -- | ConstList List    
-    | Var Id 
-    | Prim Operator
-    | App Expr Expr 
-    | LetIn Id Expr Expr 
-    | IfThenElse Expr Expr Expr 
-    deriving (Show, Eq)
+  Const Type
+  | Var Id 
+  | Prim Operator
+  | App Expr Expr 
+  | LetIn Id Expr Expr 
+  | IfThenElse Expr Expr Expr 
+  deriving (Read, Show, Eq, Ord)
 
 data Keywords = 
-    If | Then | Else 
-    | Case | Of 
-    | Let | In 
-    | Where
-    deriving (Show, Eq)
+  If | Then | Else 
+  | Case | Of 
+  | Let | In 
+  | Where
+  deriving (Read, Show, Eq, Ord)
 
 data Operator = 
-    Add | Sub | Mul | Div | Rem
-    | Gt | Ge | Lt | Le | Eq | Ne
-    | And | Or | Not  
-    | Head | Tail | ListCons
-    | Comma
-    | Assignment 
-    deriving (Show, Eq)
+  Add | Sub | Mul | Div | Rem
+  | Gt | Ge | Lt | Le | Eq | Ne
+  | And | Or | Not  
+  | Head | Tail | ListCons
+  | Comma
+  | Assignment 
+  deriving (Read, Show, Eq, Ord)
 
 data Brackets = 
-    LeftParen | RightParen
-    | LeftBracket | RightBracket
-    | LeftSquareBracket | RightSquareBracket
-    deriving (Show, Eq)
+  LeftParen | RightParen
+  | LeftBracket | RightBracket
+  | LeftSquareBracket | RightSquareBracket
+  deriving (Read, Show, Eq, Ord)
