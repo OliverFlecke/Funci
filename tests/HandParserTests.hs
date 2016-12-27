@@ -11,8 +11,9 @@ main = do
   testArithmics
   testBooleans
   testLists
-  testLetExpressions
-  -- testIfThenElse
+  testLet
+  testIfThenElse
+  testExpressions
   testMainFunction
 
 -- Testing all the arithmic operations
@@ -85,22 +86,30 @@ testLists = hspec $ do
   describe "Testing list with booleans:" $ do 
     it "One boolean" $ parseListString "True : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) Empty)))
     it "Mulitple booleans" $ parseListString "True : False : True : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) (Cons (Boole False) (Cons (Boole True) Empty)))))
-  describe "Testing list with different types:" $ do
-    it "Int and bool" $ parseListString "True : 1 : []" `shouldBe` Left "Parser error: Lists cannot have multiple types"
+  -- describe "Testing list with different types:" $ do
+  --   it "Int and bool" $ parseListString "True : 1 : []" `shouldBe` Left "Parser error: Lists cannot have multiple types"
     -- it "Int and bool" $ parseListString "True : 1 : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) (Cons (Number (Int 1)) Empty))))
 
-testLetExpressions = hspec $ do
+testLet = hspec $ do
   describe "Testing let expressions" $ do 
     it "Single variable let expressions with number" $ do 
-      parseLetString "let x = 1 in x" `shouldBe` Right (LetIn "x" (Const (Number (Integer 1))) (Var "x"))
-      parseLetString "let x = 1 + 1 in x" `shouldBe` Right (LetIn "x" (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 1)))) (Var "x"))
-      parseLetString "let x = 1 in x * x" `shouldBe` Right (LetIn "x" (Const (Number (Integer 1))) (App (App (Prim Mul) (Var "x")) (Var "x")))
+      parseExpressionsString "let x = 1 in x" `shouldBe` Right (LetIn "x" (Const (Number (Integer 1))) (Var "x"))
+      parseExpressionsString "let x = 1 + 1 in x" `shouldBe` Right (LetIn "x" (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 1)))) (Var "x"))
+      parseExpressionsString "let x = 1 in x * x" `shouldBe` Right (LetIn "x" (Const (Number (Integer 1))) (App (App (Prim Mul) (Var "x")) (Var "x")))
     it "Single variable let expressions with booleans" $ do 
-      parseLetString "let x = True in x" `shouldBe` Right (LetIn "x" (Const (Boole True)) (Var "x"))
+      parseExpressionsString "let x = True in x" `shouldBe` Right (LetIn "x" (Const (Boole True)) (Var "x"))
 
--- testIfThenElse = hspec $ do 
---   describe "Testing simple if then else expressions" $ do
---     it "If true then 1" $ parseIfThenElse "if True then 1 else 0" `shouldBe` Right (IfThenElse (Const (Boole True)) (Const (Number (Int 1))) (Const (Number (Int 0))))
+testIfThenElse = hspec $ do 
+  describe "Testing simple if then else expressions" $ do
+    it "If true then 1 else 0" $ parseExpressionsString "if True then 1 else 0" `shouldBe` Right (IfThenElse (Const (Boole True)) (Const (Number (Integer 1))) (Const (Number (Integer 0))))
+    it "If false then true else false" $ parseExpressionsString "if True then True else False" `shouldBe` Right (IfThenElse (Const (Boole True)) (Const (Boole True)) (Const (Boole False)))
+  describe "Testing with more advance if expressions" $ do 
+    it "if t || f then 1 else 0" $ parseExpressionsString "if True || False then 1 else 0" `shouldBe` Right (IfThenElse (App (App (Prim Or) (Const (Boole True))) (Const (Boole False))) (Const (Number (Integer 1))) (Const (Number (Integer 0))))
+
+testExpressions = hspec $ do 
+  describe "Testing interleaving if-then-else and let expressions" $ do 
+    it "If t then let x = 1 in x else 0" $ parseExpressionsString "if True then let x = 1 in x else 0" `shouldBe` Right (IfThenElse (Const (Boole True)) (LetIn "x" (Const (Number (Integer 1))) (Var "x")) (Const (Number (Integer 0))))
+    it "If t then 0 else let x = 1 in x" $ parseExpressionsString "if True then 0 else let x = 1 in x" `shouldBe` Right (IfThenElse (Const (Boole True)) (Const (Number (Integer 0))) (LetIn "x" (Const (Number (Integer 1))) (Var "x")))
 
 testMainFunction = hspec $ do 
   describe "Testing a simple starting point for a program" $ do 

@@ -7,7 +7,7 @@ module HandParser (
   parseArithmicString,
   parseBooleanString,
   parseListString,
-  parseLetString) where 
+  parseExpressionsString) where 
 
 import HandSyntax
 import HandLexer
@@ -27,8 +27,8 @@ parse (Identifier id : Operator Assignment : rest) =
 parse tokens = undefined
 
 -- Parse let expression
-parseLetString :: String -> Either String Expr 
-parseLetString s = lexer s >>= (\t -> fst `fmap` parseExpressions t)
+parseExpressionsString :: String -> Either String Expr 
+parseExpressionsString s = lexer s >>= (\t -> fst `fmap` parseExpressions t)
 
 parseExpressions :: [Token] -> Either String (Expr, [Token])
 parseExpressions (Keyword Let : Identifier x : Operator Assignment : rest) =
@@ -38,11 +38,16 @@ parseExpressions (Keyword Let : Identifier x : Operator Assignment : rest) =
       return $ (LetIn x e1 e2, rest'')
     _                               -> Left $ "Parser error: Expecting 'in' in let expression: " ++ (show rest)
 parseExpressions (Keyword If : rest) = 
-  case parseBExpr rest of 
-    Left s        -> Left s
-    Right (b, Keyword Then : rest') -> do 
-      return $ (IfThenElse b (Const (Number (Integer 0))) (Const (Number (Integer 0))), rest') -- Not working !!!
-    _                               -> Left $ "Parser error: If then else something"
+  case parseBoolean rest of 
+    Left s                          -> Left s
+    Right (b, Keyword Then : rest') -> 
+      case parseExpressions rest' of
+        Left s                            -> Left s
+        Right (e1, Keyword Else : rest'') -> do 
+          (e2, r) <- parseExpressions rest''
+          return $ (IfThenElse b e1 e2, r)
+        Right (_, rest'')                 -> Left $ "Parser error: Expected keyword 'else' at " ++ (show rest'')
+    Right (_, rest')                -> Left $ "Parser error: Expected keyword 'then' at " ++ (show rest')
 
 parseExpressions tokens = parseBasic tokens
 
@@ -59,20 +64,26 @@ parseList (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = Righ
 parseList (t : Operator ListCons : rest) = 
 -- Really want to find a way to make this nicer
   case parseList rest of 
-    Right (Const (ConstList Empty), rest') ->  
-      case t of 
-        Num n     -> Right (Const $ ConstList (Cons (Number n) Empty), rest')
-        Boolean b -> Right (Const $ ConstList (Cons (Boole b) Empty), rest')
-        _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
-    Right (Const (ConstList l@(Cons (Number _) _)), rest')  -> 
-      case t of 
-        Num n     -> Right (Const $ ConstList (Cons (Number n) l), rest')
-        Boolean _ -> Left $ "Parser error: Lists cannot have multiple types"
-        _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
-    Right (Const (ConstList l@(Cons (Boole _) _)), rest')  -> 
+    -- All this is to avoid differnt types in one list. 
+    -- Should be done later instead with general type checking ???
+    -- Right (Const (ConstList Empty), rest') ->  
+    --   case t of 
+    --     Num n     -> Right (Const $ ConstList (Cons (Number n) Empty), rest')
+    --     Boolean b -> Right (Const $ ConstList (Cons (Boole b) Empty), rest')
+    --     _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
+    -- Right (Const (ConstList l@(Cons (Number _) _)), rest')  -> 
+    --   case t of 
+    --     Num n     -> Right (Const $ ConstList (Cons (Number n) l), rest')
+    --     Boolean _ -> Left $ "Parser error: Lists cannot have multiple types"
+    --     _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
+    -- Right (Const (ConstList l@(Cons (Boole _) _)), rest')  -> 
+    --   case t of 
+    --     Boolean b -> Right (Const $ ConstList (Cons (Boole b) l), rest')
+    --     Num _     -> Left $ "Parser error: Lists cannot have multiple types"
+    Right (Const (ConstList l), rest')  -> 
       case t of 
         Boolean b -> Right (Const $ ConstList (Cons (Boole b) l), rest')
-        Num _     -> Left $ "Parser error: Lists cannot have multiple types"
+        Num n     -> Right (Const $ ConstList (Cons (Number n) l), rest')
         _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
     Right (e, rest')                    -> Left $ "Parser error: Unable to construct list" ++ (show rest)
     Left s                              -> Left s
@@ -91,9 +102,13 @@ parseList (Bracket LeftSquareBracket : t : rest) =
       (Const (ConstList l), rest') <- parseList' rest
       Right (Const (ConstList (Cons (Number n) l)), rest')
     parseList' t = Left $ "Parser error: Unable to construct list" ++ (show t)
-parseList t@(Num n : Operator op : rest) = undefined
-  -- case parseArithmic t of 
-  --   Right  
+-- parseList t = 
+--   case parseBasic t of 
+--     Right (e, Operator ListCons : rest) -> do 
+--       case parseList rest of 
+         
+--     Right et                            -> return $ et
+--     Left s                              -> Left s
 
 -- This function will parse the basic boolean and arithmic languages 
 parseBasic :: [Token] -> Either String (Expr, [Token])
