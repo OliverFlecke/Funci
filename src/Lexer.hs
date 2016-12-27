@@ -1,7 +1,7 @@
-module HandLexer where 
+module Lexer where 
 
 import Data.Char
-import HandSyntax
+import Syntax
 
 addToken :: Token -> String -> Either String [Token]
 addToken t s = lexer s >>= (\ts -> Right $ t : ts)
@@ -49,6 +49,7 @@ lexer ('*':cs) = addToken (Operator Mul) cs
 lexer ('/':cs) = addToken (Operator Div) cs
 lexer ('%':cs) = addToken (Operator Rem) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
+lexer (':':':':cs) = addToken (Operator TypeAssignment) cs
 
 lexer ('h':'e':'a':'d':cs) = addToken (Operator Head) cs
 lexer ('t':'a':'i':'l':cs) = addToken (Operator Tail) cs

@@ -1,7 +1,7 @@
 module Main where
 
-import HandLexer
-import HandSyntax
+import Lexer
+import Syntax
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
@@ -43,6 +43,7 @@ testArithmicOperators = hspec $ do
     it "Divition" $ lexer "/" `shouldBe` Right [Operator Div]
     it "Reminder" $ lexer "%" `shouldBe` Right [Operator Rem]
     it "Assignment" $ lexer "=" `shouldBe` Right [Operator Assignment]
+    it "Type Assignment" $ lexer "::" `shouldBe` Right [Operator TypeAssignment]
 
 -- Test comparation operators
 testCompareOperators = hspec $ do 

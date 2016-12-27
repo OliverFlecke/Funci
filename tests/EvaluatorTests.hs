@@ -1,0 +1,35 @@
+module Main where
+
+import Lexer
+import Syntax
+import Evaluator
+import Test.Hspec
+import Test.Hspec.QuickCheck
+
+main :: IO () 
+main = do 
+  basicTests
+  arithmicTest
+
+basicTests = hspec $ do 
+  describe "Evaluate basics" $ do 
+    it "evaluate integer" $ evaluateString "main = 0" `shouldBe` (I 0)
+    it "evaluate float" $ evaluateString "main = 0.0" `shouldBe` (F 0.0)
+    it "evaluate boolean" $ do 
+      evaluateString "main = True" `shouldBe` (B True)
+      evaluateString "main = False" `shouldBe` (B False)
+
+arithmicTest = hspec $ do 
+  describe "Evaluate numbering arithmics:" $ do 
+    it "Addition" $ do 
+      evaluateString "main = 1 + 2" `shouldBe` (I 3)
+      evaluateString "main = 1.1 + 2.5" `shouldBe` (F 3.6)
+    it "Subtraction" $ do 
+      evaluateString "main = 2 - 1" `shouldBe` (I 1)
+      evaluateString "main = 2.5 - 0.5" `shouldBe` (F 2.0)
+    it "Multiplication" $ do 
+      evaluateString "main = 2 * 3" `shouldBe` (I 6)
+      evaluateString "main = 2.0 * 3.5" `shouldBe` (F 7)
+    it "Divition" $ do
+     evaluateString "main = 6 / 2" `shouldBe` (I 3)
+     evaluateString "main = 6.0 / 2.0" `shouldBe` (F 3.0)

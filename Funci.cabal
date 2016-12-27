@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                Funci
-version:             0.1.0.11
+version:             0.1.1.12
 synopsis:            Compiler to parse and compile a functional language, working title "Funci"
 description:         This projects focus on building a simple compiler for a functional language. This is not intended to be something for real use, but only for learning.   
 license:             BSD3
@@ -16,22 +16,32 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 executable Funci
-  main-is:             Main.hs 
-  build-depends:       base >=4.9 && <4.10
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-
-library
-  exposed-modules:      HandLexer
-                      , HandParser
-                      , HandSyntax
-  build-depends:        base
+  main-is:              Main.hs 
+  other-modules:        Lexer 
+                      , Parser 
+                      , Syntax
+                      , Evaluator
+                      , Environment
+  build-depends:        base >=4.9 && <4.10
+                      , containers >= 0.5.8
   hs-source-dirs:       src
   default-language:     Haskell2010
 
-test-suite HLexer
+library
+  exposed-modules:      Lexer
+                      , Parser
+                      , Syntax
+                      , Evaluator
+                      , Environment
+  build-depends:        base
+                      , containers >= 0.5.8
+  hs-source-dirs:       src
+  default-language:     Haskell2010
+
+-- Test suits
+test-suite Lexer
   type:                 exitcode-stdio-1.0
-  main-is:              HandLexerTests.hs
+  main-is:              LexerTests.hs
   hs-source-dirs:       tests
   build-depends:        base
                       , Funci
@@ -39,9 +49,19 @@ test-suite HLexer
                       , QuickCheck
   default-language:     Haskell2010
 
-test-suite HParser
+test-suite Parser
   type:                 exitcode-stdio-1.0
-  main-is:              HandParserTests.hs
+  main-is:              ParserTests.hs
+  hs-source-dirs:       tests
+  build-depends:        base 
+                      , Funci 
+                      , hspec
+                      , QuickCheck
+  default-language:     Haskell2010
+
+test-suite Evaluator 
+  type:                 exitcode-stdio-1.0
+  main-is:              EvaluatorTests.hs
   hs-source-dirs:       tests
   build-depends:        base 
                       , Funci 

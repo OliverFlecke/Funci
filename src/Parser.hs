@@ -1,7 +1,7 @@
 -- This module will be able to transform the tokens from the lexer 
 -- into an abstract syntax tree (AST), which is the internal 
 -- representation of the program
-module HandParser (
+module Parser (
   parseString,
   parse,
   parseArithmicString,
@@ -9,8 +9,8 @@ module HandParser (
   parseListString,
   parseExpressionsString) where 
 
-import HandSyntax
-import HandLexer
+import Syntax
+import Lexer
 
 parseString :: String -> Either String Program
 parseString s = lexer s >>= parse
@@ -32,11 +32,6 @@ parseExpressionsString s = lexer s >>= (\t -> fst `fmap` parseExpressions t)
 
 parseExpressions :: [Token] -> Either String (Expr, [Token])
 parseExpressions (Keyword Let : rest) = parseLet rest
-  -- case parseBasic rest of 
-  --   Right (e, Keyword In : rest')  -> do 
-  --     (body, rest'') <- parseBasic rest' 
-  --     return $ (LetIn [(x, e)] body, rest'')
-  --   _                               -> Left $ "Parser error: Expecting 'in' in let expression: " ++ (show rest)
   where 
     parseLet :: [Token] -> Either String (Expr, [Token])
     parseLet (Identifier x : Operator Assignment : rest) = 
@@ -75,24 +70,7 @@ parseListString s = do
 parseList :: [Token] -> Either String (Expr, [Token])
 parseList (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = Right (Const (ConstList Empty), rest)
 parseList (t : Operator ListCons : rest) = 
--- Really want to find a way to make this nicer
   case parseList rest of 
-    -- All this is to avoid differnt types in one list. 
-    -- Should be done later instead with general type checking ???
-    -- Right (Const (ConstList Empty), rest') ->  
-    --   case t of 
-    --     Num n     -> Right (Const $ ConstList (Cons (Number n) Empty), rest')
-    --     Boolean b -> Right (Const $ ConstList (Cons (Boole b) Empty), rest')
-    --     _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
-    -- Right (Const (ConstList l@(Cons (Number _) _)), rest')  -> 
-    --   case t of 
-    --     Num n     -> Right (Const $ ConstList (Cons (Number n) l), rest')
-    --     Boolean _ -> Left $ "Parser error: Lists cannot have multiple types"
-    --     _         -> Left $ "Parser error: Unable to construct list" ++ (show rest)
-    -- Right (Const (ConstList l@(Cons (Boole _) _)), rest')  -> 
-    --   case t of 
-    --     Boolean b -> Right (Const $ ConstList (Cons (Boole b) l), rest')
-    --     Num _     -> Left $ "Parser error: Lists cannot have multiple types"
     Right (Const (ConstList l), rest')  -> 
       case t of 
         Boolean b -> Right (Const $ ConstList (Cons (Boole b) l), rest')
@@ -115,13 +93,6 @@ parseList (Bracket LeftSquareBracket : t : rest) =
       (Const (ConstList l), rest') <- parseList' rest
       Right (Const (ConstList (Cons (Number n) l)), rest')
     parseList' t = Left $ "Parser error: Unable to construct list" ++ (show t)
--- parseList t = 
---   case parseBasic t of 
---     Right (e, Operator ListCons : rest) -> do 
---       case parseList rest of 
-
---     Right et                            -> return $ et
---     Left s                              -> Left s
 
 -- This function will parse the basic boolean and arithmic languages 
 parseBasic :: [Token] -> Either String (Expr, [Token])

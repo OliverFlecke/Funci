@@ -1,8 +1,8 @@
 module Main where
 
-import HandSyntax
-import HandLexer 
-import HandParser 
+import Syntax
+import Lexer 
+import Parser 
 import Test.Hspec
 import Test.Hspec.QuickCheck
 

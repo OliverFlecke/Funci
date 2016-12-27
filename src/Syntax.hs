@@ -1,4 +1,4 @@
-module HandSyntax where
+module Syntax where
 
 type Program = [Bind] 
 type Id = String 
@@ -70,8 +70,8 @@ data Operator =
   | Gt | Ge | Lt | Le | Eq | Ne
   | And | Or | Not  
   | Head | Tail | ListCons
-  | Comma
-  | Assignment 
+  | Comma 
+  | Assignment | TypeAssignment 
   deriving (Read, Show, Eq, Ord)
 
 data Brackets = 
