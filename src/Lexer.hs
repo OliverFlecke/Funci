@@ -47,7 +47,7 @@ lexer ('+':cs) = addToken (Operator Add) cs
 lexer ('-':cs) = addToken (Operator Sub) cs
 lexer ('*':cs) = addToken (Operator Mul) cs
 lexer ('/':cs) = addToken (Operator Div) cs
-lexer ('%':cs) = addToken (Operator Rem) cs
+lexer ('%':cs) = addToken (Operator Mod) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
 lexer (':':':':cs) = addToken (Operator TypeAssignment) cs
 

@@ -193,7 +193,7 @@ parsePExpr tokens = do
             (Const (Number (Floating 0)):xs)  -> Left "Arithmic error: Divide by zero"
             (Const (Number (Integer 0)):xs)   -> Left "Arithmic error: Divide by zero"
             _             -> return (expr : exprs, rt, Div : ops)
-        Right (expr, Operator Rem : rest')  -> parsePExpr' rest' >>= concatExprUsingOp expr Rem
+        Right (expr, Operator Mod : rest')  -> parsePExpr' rest' >>= concatExprUsingOp expr Mod
         Right (expr', rest')                -> return ([expr'], rest', [Mul])
         Left s                              -> Left s
 

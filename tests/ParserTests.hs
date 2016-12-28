@@ -45,8 +45,8 @@ testArithmics = hspec $ do
       parseArithmicString "1 * 2 / 3" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Mul) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
       parseArithmicString "1 / 2 * 3" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Div) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
     it "Testing reminder operator" $ do 
-      parseArithmicString "5 % 2" `shouldBe` Right (App (App (Prim Rem) (Const (Number (Integer 5)))) (Const (Number (Integer 2))))
-      parseArithmicString "5 % 2 % 2" `shouldBe` Right (App (App (Prim Rem) (App (App (Prim Rem) (Const (Number (Integer 5)))) (Const (Number (Integer 2))))) (Const (Number (Integer 2))))
+      parseArithmicString "5 % 2" `shouldBe` Right (App (App (Prim Mod) (Const (Number (Integer 5)))) (Const (Number (Integer 2))))
+      parseArithmicString "5 % 2 % 2" `shouldBe` Right (App (App (Prim Mod) (App (App (Prim Mod) (Const (Number (Integer 5)))) (Const (Number (Integer 2))))) (Const (Number (Integer 2))))
     it "Testing Parentesics" $ do 
       parseArithmicString "2 * (1 + 3)" `shouldBe` Right (App (App (Prim Mul) (Const (Number (Integer 2)))) (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 3)))))
   describe "Simple arithmic operations with floating points" $ do 
@@ -80,7 +80,7 @@ testArithmics = hspec $ do
     it "Subtraction" $    parseArithmicString "x - y" `shouldBe` Right (App (App (Prim Sub) (Var "x")) (Var "y"))
     it "Multiplcation" $  parseArithmicString "x * y" `shouldBe` Right (App (App (Prim Mul) (Var "x")) (Var "y"))
     it "Division" $       parseArithmicString "x / y" `shouldBe` Right (App (App (Prim Div) (Var "x")) (Var "y"))
-    it "Reminder" $       parseArithmicString "x % y" `shouldBe` Right (App (App (Prim Rem) (Var "x")) (Var "y"))
+    it "Modulo" $       parseArithmicString "x % y" `shouldBe` Right (App (App (Prim Mod) (Var "x")) (Var "y"))
 
 -- Testing booleans
 testBooleans = hspec $ do 

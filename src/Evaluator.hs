@@ -52,4 +52,9 @@ evalOp Mul [I x, I y] = I (x * y)
 evalOp Mul [F x, F y] = F (x * y)
 evalOp Div [I x, I y] = I (quot x y)
 evalOp Div [F x, F y] = F (x / y)
+evalOp Mod [I x, I y] = I (mod x y)
+
+evalOp Not [B b]      = B (not b)
+evalOp And [B x, B y] = B (x && y) 
+evalOp Or  [B x, B y] = B (x || y)
 evalOp op vs = P op vs

@@ -22,6 +22,10 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.1.2  -- 2016-12-28 
+* Renamed the reminder operator to modulo ('Rem' to 'Mod')
+* Evaluator can now evaluate boolean expressions
+
 #### 0.1.1.1  -- 2016-12-28
 * The reminder operator is added to the parser 
 * Error when parsing parentizies (Had mixed up the left and right)

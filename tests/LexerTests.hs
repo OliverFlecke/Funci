@@ -41,7 +41,7 @@ testArithmicOperators = hspec $ do
     it "Subtraction" $ lexer "-" `shouldBe` Right [Operator Sub]
     it "Multiplcation" $ lexer "*" `shouldBe` Right [Operator Mul]
     it "Divition" $ lexer "/" `shouldBe` Right [Operator Div]
-    it "Reminder" $ lexer "%" `shouldBe` Right [Operator Rem]
+    it "Reminder" $ lexer "%" `shouldBe` Right [Operator Mod]
     it "Assignment" $ lexer "=" `shouldBe` Right [Operator Assignment]
     it "Type Assignment" $ lexer "::" `shouldBe` Right [Operator TypeAssignment]
 

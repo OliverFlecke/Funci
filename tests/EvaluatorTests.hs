@@ -1,7 +1,7 @@
 module Main where
 
-import Lexer
-import Syntax
+-- import Lexer
+-- import Syntax
 import Evaluator
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -9,7 +9,8 @@ import Test.Hspec.QuickCheck
 main :: IO () 
 main = do 
   basicTests
-  arithmicTest
+  arithmicTests
+  booleanArithmicTests
 
 basicTests = hspec $ do 
   describe "Evaluate basics" $ do 
@@ -19,7 +20,7 @@ basicTests = hspec $ do
       evaluateString "main = True" `shouldBe` (B True)
       evaluateString "main = False" `shouldBe` (B False)
 
-arithmicTest = hspec $ do 
+arithmicTests = hspec $ do 
   describe "Evaluate numbering arithmics:" $ do 
     it "Addition" $ do 
       evaluateString "main = 1 + 2" `shouldBe` (I 3)
@@ -33,3 +34,25 @@ arithmicTest = hspec $ do
     it "Divition" $ do
      evaluateString "main = 6 / 2" `shouldBe` (I 3)
      evaluateString "main = 6.0 / 2.0" `shouldBe` (F 3.0)
+    it "Reminder" $ do 
+      evaluateString "main = 5 % 2" `shouldBe` (I 1)
+
+booleanArithmicTests = hspec $ do 
+  describe "Evaluate boolean expressions" $ do 
+    it "Not operator" $ do 
+      evaluateString "main = !True" `shouldBe` (B False)
+      evaluateString "main = !False" `shouldBe` (B True)
+    it "And operator" $ do 
+      evaluateString "main = True && True" `shouldBe` (B True)
+      evaluateString "main = True && False" `shouldBe` (B False)
+      evaluateString "main = False && True" `shouldBe` (B False)
+      evaluateString "main = False && False" `shouldBe` (B False)
+    it "Or operator" $ do 
+      evaluateString "main = True || True" `shouldBe` (B True)
+      evaluateString "main = True || False" `shouldBe` (B True)
+      evaluateString "main = False || True" `shouldBe` (B True)
+      evaluateString "main = False || False" `shouldBe` (B False)
+    it "Interleaving operators" $ do 
+      evaluateString "main = True && False || True" `shouldBe` (B True)
+      evaluateString "main = False || False && True" `shouldBe` (B False)
+      evaluateString "main = !False && True" `shouldBe` (B True)

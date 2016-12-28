@@ -66,7 +66,7 @@ data Keywords =
   deriving (Read, Show, Eq, Ord)
 
 data Operator = 
-  Add | Sub | Mul | Div | Rem
+  Add | Sub | Mul | Div | Mod
   | Gt | Ge | Lt | Le | Eq | Ne
   | And | Or | Not  
   | Head | Tail | ListCons
