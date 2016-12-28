@@ -208,6 +208,12 @@ parseSExpr tokens = do
       case parsePExpr token of 
         Right (expr, Operator Add : rest')  -> parseSExpr' rest' >>= concatExprUsingOp expr Add
         Right (expr, Operator Sub : rest')  -> parseSExpr' rest' >>= concatExprUsingOp expr Sub
+        Right (expr, Operator Eq : rest')   -> parseSExpr' rest' >>= concatExprUsingOp expr Eq
+        Right (expr, Operator Ne : rest')   -> parseSExpr' rest' >>= concatExprUsingOp expr Ne
+        Right (expr, Operator Gt : rest')   -> parseSExpr' rest' >>= concatExprUsingOp expr Gt
+        Right (expr, Operator Lt : rest')   -> parseSExpr' rest' >>= concatExprUsingOp expr Lt
+        Right (expr, Operator Ge : rest')   -> parseSExpr' rest' >>= concatExprUsingOp expr Ge
+        Right (expr, Operator Le : rest')   -> parseSExpr' rest' >>= concatExprUsingOp expr Le
         Right (expr', rest')                -> return ([expr'], rest', [Add]) 
         Left s                              -> Left s
 

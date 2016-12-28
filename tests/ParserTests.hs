@@ -10,6 +10,7 @@ main :: IO ()
 main = do 
   testArithmics
   testBooleans
+  comparatorOperatorsTests
   testLists
   testLet
   testIfThenElse
@@ -103,6 +104,15 @@ testBooleans = hspec $ do
     it "-F || F" $ parseBooleanString "!False || False" `shouldBe` Right (App (App (Prim Or) (App (Prim Not) (Const (Boole False)))) (Const (Boole False)))
     it "-F && T || F" $ parseBooleanString "!False && True || False" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (App (Prim Not) (Const (Boole False)))) (Const (Boole True)))) (Const (Boole False)))
     it "-(F && T)" $ parseBooleanString "!(False && True)" `shouldBe` Right (App (Prim Not) (App (App (Prim And) (Const (Boole False))) (Const (Boole True))))
+
+comparatorOperatorsTests = hspec $ do 
+  describe "Testing comparator operators" $ do 
+    it "Equality" $               parseArithmicString "1 == 2"  `shouldBe` Right (App (App (Prim Eq) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
+    it "Inequality" $             parseArithmicString "1 != 2"  `shouldBe` Right (App (App (Prim Ne) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
+    it "Greater than" $           parseArithmicString "1 > 2"   `shouldBe` Right (App (App (Prim Gt) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
+    it "Less than" $              parseArithmicString "1 < 2"   `shouldBe` Right (App (App (Prim Lt) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
+    it "Greater than or equal" $  parseArithmicString "1 >= 2"  `shouldBe` Right (App (App (Prim Ge) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
+    it "Less than or equal" $     parseArithmicString "1 <= 2"  `shouldBe` Right (App (App (Prim Le) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
 
 testLists = hspec $ do 
   describe "Testing simple list construction:" $ do

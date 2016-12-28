@@ -11,6 +11,7 @@ main = do
   basicTests
   arithmicTests
   booleanArithmicTests
+  compareOperatorTests
 
 basicTests = hspec $ do 
   describe "Evaluate basics" $ do 
@@ -56,3 +57,42 @@ booleanArithmicTests = hspec $ do
       evaluateString "main = True && False || True" `shouldBe` (B True)
       evaluateString "main = False || False && True" `shouldBe` (B False)
       evaluateString "main = !False && True" `shouldBe` (B True)
+
+compareOperatorTests = hspec $ do 
+  describe "Evaluate comparator operators - " $ do 
+    it "Testing equality operator" $ do 
+      evaluateString "main = 1 == 1" `shouldBe` (B True)
+      evaluateString "main = 1 == 0" `shouldBe` (B False)
+      evaluateString "main = 1.0 == 1.0" `shouldBe` (B True)
+      evaluateString "main = 1.0 == 0.0" `shouldBe` (B False)
+    it "Testing inequality operator" $ do 
+      evaluateString "main = 1 != 1" `shouldBe` (B False)
+      evaluateString "main = 1 != 0" `shouldBe` (B True)
+      evaluateString "main = 1.0 != 1.0" `shouldBe` (B False)
+      evaluateString "main = 1.0 != 0.0" `shouldBe` (B True)
+    it "Testing Greater than" $ do 
+      evaluateString "main = 1 > 0" `shouldBe` (B True)
+      evaluateString "main = 0 > 1" `shouldBe` (B False)
+      evaluateString "main = 1.0 > 0.0" `shouldBe` (B True)
+      evaluateString "main = 0.0 > 1.0" `shouldBe` (B False)    
+    it "Testing Less than" $ do 
+      evaluateString "main = 1 < 0" `shouldBe` (B False)
+      evaluateString "main = 0 < 1" `shouldBe` (B True)
+      evaluateString "main = 1.0 < 0.0" `shouldBe` (B False)
+      evaluateString "main = 0.0 < 1.0" `shouldBe` (B True)
+    it "Testing Greater than or equal to" $ do 
+      evaluateString "main = 1 >= 0" `shouldBe` (B True)
+      evaluateString "main = 0 >= 1" `shouldBe` (B False)
+      evaluateString "main = 1 >= 1" `shouldBe` (B True)
+      evaluateString "main = 1.0 >= 0.0" `shouldBe` (B True)
+      evaluateString "main = 0.0 >= 1.0" `shouldBe` (B False)
+      evaluateString "main = 1.0 >= 1.0" `shouldBe` (B True)
+    it "Testing Less than or equal to" $ do 
+      evaluateString "main = 1 <= 0" `shouldBe` (B False)
+      evaluateString "main = 0 <= 1" `shouldBe` (B True)
+      evaluateString "main = 1 <= 1" `shouldBe` (B True)
+      evaluateString "main = 1.0 <= 0.0" `shouldBe` (B False)
+      evaluateString "main = 0.0 <= 1.0" `shouldBe` (B True)
+      evaluateString "main = 1.0 <= 1.0" `shouldBe` (B True)
+
+

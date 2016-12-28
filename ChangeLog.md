@@ -22,6 +22,12 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.1.3  -- 2016-12-28 
+* Added support for the comparator operators in the parser
+* Evaluator can now handle compartor operators between numbers 
+    * These are currently at the same priority level as Add and Sub operator
+    * They cannot currently be interleaved with standard boolean values
+
 #### 0.1.1.2  -- 2016-12-28 
 * Renamed the reminder operator to modulo ('Rem' to 'Mod')
 * Evaluator can now evaluate boolean expressions
