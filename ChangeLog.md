@@ -2,25 +2,30 @@
 
 # Todo list: 
 - [x] Get the HandParser to return the error messages properly instead of just calling error 
-- [ ] Write test cases for the HandParser
+- [ ] Write test cases for the Parser
     - [x] Add test cases for arithmic expressions
     - [x] Add test cases for boolean expressions
     - [ ] Add test cases for lists 
     - [ ] Add test cases for let expressions 
     - [ ] Add test cases for if then else expressions
-- [ ] Implement the HandParser
+- [ ] Implement the Parser
     - [x] Implement the arithmic language for the parser
     - [x] Implement the boolean language for the parser
     - [x] Implement support for lists with numbers
         - [ ] Upgrade this to support lists of any type
         - [ ] Find a better way to implement the different types
     - [x] Implement let expressions
-    - [ ] Implement if then else expressions
+    - [x] Implement if then else expressions
     - [ ] Implement case expressions
+- [ ] Implement a type checker
 - [ ] Write documentation about how the language actually works
 
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
+
+### 0.1.2.0   -- 2016-12-28 
+* The structure of how the operators are parsed have been completly changed. Every operator is now defined in the same language, where they follow the standard precedence order (from C and most programming languages). This has made it lot more clear what level each operator is working on. 
+    * Note: No new operators have been added at this stage, so some of the precedence levels are not in use currently
 
 #### 0.1.1.3  -- 2016-12-28 
 * Added support for the comparator operators in the parser

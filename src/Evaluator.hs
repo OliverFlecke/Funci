@@ -12,7 +12,7 @@ data Value = I Int
            | F Float
            | B Bool
            | Nil
-           | Cons Integer Value
+           | LCons Value Value
            | Fun VEnv [Char] [[Char]] Expr
            | P Operator [Value]
            | C Id [Value]
@@ -33,6 +33,13 @@ evalE :: VEnv -> Expr -> Value
 evalE g (Const (Number (Integer n)))  = I n 
 evalE g (Const (Number (Floating n))) = F n 
 evalE g (Const (Boole b))             = B b
+
+evalE g (Const (ConstList Empty)) = Nil
+evalE g (Const (ConstList l)) = error (show l)
+  -- let l' = evalE g l 
+  -- in case s of 
+    -- Const (Number (Integer n)) -> LCons (I n) l'
+    -- s -> error (show s)
 
 evalE g (Prim op) = P op []
 evalE g (App a b) = case evalE g a of 

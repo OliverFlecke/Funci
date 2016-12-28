@@ -14,6 +14,7 @@ data Type =
   Number NumType
   | Boole Bool
   | ConstList (List Type)
+  | EmptyList
   deriving (Read, Show, Eq, Ord)
 
 data QType = Forall Id QType

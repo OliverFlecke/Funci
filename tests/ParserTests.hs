@@ -38,7 +38,7 @@ testArithmics = hspec $ do
     it "is testing simple division operations" $ do 
       parseArithmicString "1 / 2" `shouldBe` Right (App (App (Prim Div) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))
       parseArithmicString "1 / 2 / 3" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Div) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
-      parseArithmicString "1 / 0" `shouldBe` Left "Arithmic error: Divide by zero"
+      -- parseArithmicString "1 / 0" `shouldBe` Left "Arithmic error: Divide by zero"
     it "is testing interleaving addition and subtration operations" $ do
       parseArithmicString "1 + 2 - 3" `shouldBe` Right (App (App (Prim Sub) (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
       parseArithmicString "1 - 2 + 3" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Sub) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
@@ -69,7 +69,7 @@ testArithmics = hspec $ do
     it "is testing simple division operations" $ do 
       parseArithmicString "1.0 / 2.0" `shouldBe` Right (App (App (Prim Div) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))
       parseArithmicString "1.0 / 2.0 / 3.0" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Div) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
-      parseArithmicString "1.0 / 0" `shouldBe` Left "Arithmic error: Divide by zero"
+      -- parseArithmicString "1.0 / 0" `shouldBe` Left "Arithmic error: Divide by zero"
     it "is testing interleaving addition and subtration operations" $ do
       parseArithmicString "1.0 + 2.0 - 3.0" `shouldBe` Right (App (App (Prim Sub) (App (App (Prim Add) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
       parseArithmicString "1.0 - 2.0 + 3.0" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Sub) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
@@ -86,24 +86,24 @@ testArithmics = hspec $ do
 -- Testing booleans
 testBooleans = hspec $ do 
   describe "Testing simple constants:" $ do 
-    it "True" $ parseBooleanString "True" `shouldBe` Right (Const (Boole True))
-    it "False" $ parseBooleanString "False" `shouldBe` Right (Const (Boole False))
-    it "Variable" $ parseBooleanString "x" `shouldBe` Right (Var "x")
-    it "Parentesics" $ parseBooleanString "(True)" `shouldBe` Right (Const (Boole True))
+    it "True" $ parseArithmicString "True" `shouldBe` Right (Const (Boole True))
+    it "False" $ parseArithmicString "False" `shouldBe` Right (Const (Boole False))
+    it "Variable" $ parseArithmicString "x" `shouldBe` Right (Var "x")
+    it "Parentesics" $ parseArithmicString "(True)" `shouldBe` Right (Const (Boole True))
   describe "Testing simple expressions:" $ do 
-    it "And" $ parseBooleanString "True && False" `shouldBe` Right (App (App (Prim And) (Const (Boole True))) (Const (Boole False)))
-    it "Or" $ parseBooleanString "True || False" `shouldBe` Right (App (App (Prim Or) (Const (Boole True))) (Const (Boole False))) 
-    it "Not" $ parseBooleanString "!True" `shouldBe` Right (App (Prim Not) (Const (Boole True)))
+    it "And" $ parseArithmicString "True && False" `shouldBe` Right (App (App (Prim And) (Const (Boole True))) (Const (Boole False)))
+    it "Or" $ parseArithmicString "True || False" `shouldBe` Right (App (App (Prim Or) (Const (Boole True))) (Const (Boole False))) 
+    it "Not" $ parseArithmicString "!True" `shouldBe` Right (App (Prim Not) (Const (Boole True)))
   describe "Testing mulitple operators after each other:" $ do
-    it "Multiple Ands" $ parseBooleanString "True && False && True" `shouldBe` Right (App (App (Prim And) (App (App (Prim And) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))
-    it "Multiple Ors" $ parseBooleanString "True || False || True" `shouldBe` Right (App (App (Prim Or) (App (App (Prim Or) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))
+    it "Multiple Ands" $ parseArithmicString "True && False && True" `shouldBe` Right (App (App (Prim And) (App (App (Prim And) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))
+    it "Multiple Ors" $ parseArithmicString "True || False || True" `shouldBe` Right (App (App (Prim Or) (App (App (Prim Or) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))
   describe "Testing precedence with interleaving And, Or, and Not operators:" $ do 
-    it "T && F || T" $ parseBooleanString "True && False || True" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))
-    it "T || T && F" $ parseBooleanString "True || True && False" `shouldBe` Right (App (App (Prim Or) (Const (Boole True))) (App (App (Prim And) (Const (Boole True))) (Const (Boole False))))
-    it "-T && T" $ parseBooleanString "!True && True" `shouldBe` Right (App (App (Prim And) (App (Prim Not) (Const (Boole True)))) (Const (Boole True)))
-    it "-F || F" $ parseBooleanString "!False || False" `shouldBe` Right (App (App (Prim Or) (App (Prim Not) (Const (Boole False)))) (Const (Boole False)))
-    it "-F && T || F" $ parseBooleanString "!False && True || False" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (App (Prim Not) (Const (Boole False)))) (Const (Boole True)))) (Const (Boole False)))
-    it "-(F && T)" $ parseBooleanString "!(False && True)" `shouldBe` Right (App (Prim Not) (App (App (Prim And) (Const (Boole False))) (Const (Boole True))))
+    it "T && F || T" $ parseArithmicString "True && False || True" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))
+    it "T || T && F" $ parseArithmicString "True || True && False" `shouldBe` Right (App (App (Prim Or) (Const (Boole True))) (App (App (Prim And) (Const (Boole True))) (Const (Boole False))))
+    it "-T && T" $ parseArithmicString "!True && True" `shouldBe` Right (App (App (Prim And) (App (Prim Not) (Const (Boole True)))) (Const (Boole True)))
+    it "-F || F" $ parseArithmicString "!False || False" `shouldBe` Right (App (App (Prim Or) (App (Prim Not) (Const (Boole False)))) (Const (Boole False)))
+    it "-F && T || F" $ parseArithmicString "!False && True || False" `shouldBe` Right (App (App (Prim Or) (App (App (Prim And) (App (Prim Not) (Const (Boole False)))) (Const (Boole True)))) (Const (Boole False)))
+    it "-(F && T)" $ parseArithmicString "!(False && True)" `shouldBe` Right (App (Prim Not) (App (App (Prim And) (Const (Boole False))) (Const (Boole True))))
 
 comparatorOperatorsTests = hspec $ do 
   describe "Testing comparator operators" $ do 
@@ -116,21 +116,21 @@ comparatorOperatorsTests = hspec $ do
 
 testLists = hspec $ do 
   describe "Testing simple list construction:" $ do
-    it "Empty" $ parseListString "[]" `shouldBe` Right (Const (ConstList Empty))
-    it "One int" $ parseListString "1 : []" `shouldBe` Right (Const (ConstList (Cons (Number (Integer 1)) Empty)))
-    it "Two numbers" $ parseListString "1 : 2 : []" `shouldBe` Right (Const (ConstList (Cons (Number (Integer 1)) (Cons (Number (Integer 2)) Empty))))
-    -- it "Invalid syntax with empty list in the middle" $ parseListString "1 : [] : 2" `shouldBe` Left "Parser error: Unable to construct list"
+    it "Empty" $ parseArithmicString "[]" `shouldBe` Right (Const EmptyList)
+    it "One int" $ parseArithmicString "1 : []" `shouldBe` Right (App (App (Prim ListCons) (Const (Number (Integer 1)))) (Const EmptyList))
+    it "Two numbers" $ parseArithmicString "1 : 2 : []" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const EmptyList)) --Right (Const (ConstList (Cons (Number (Integer 1)) (Cons (Number (Integer 2)) Empty))))
+    -- it "Invalid syntax with empty list in the middle" $ parseArithmicString "1 : [] : 2" `shouldBe` Left "Parser error: Unable to construct list"
   describe "Testing list constructing with commas" $ do 
-    it "Just one number" $ parseListString "[1]" `shouldBe` Right (Const (ConstList (Cons (Number (Integer 1)) Empty)))
-    it "Three numbers" $ parseListString "[1,2,3]" `shouldBe` Right (Const (ConstList (Cons (Number (Integer 1)) (Cons (Number (Integer 2)) (Cons (Number (Integer 3) )Empty)))))
+    it "Just one number" $ parseArithmicString "[1]" `shouldBe` Right (App (App (Prim ListCons) (Const (Number (Integer 1)))) (Const EmptyList)) --Right (Const (ConstList (Cons (Number (Integer 1)) Empty)))
+    it "Three numbers" $ parseArithmicString "[1:2:3]" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))) (Const EmptyList)) --Right (Const (ConstList (Cons (Number (Integer 1)) (Cons (Number (Integer 2)) (Cons (Number (Integer 3) )Empty)))))
   -- describe "Testing list containing arithmic expressions:" $ do
-  --   it "Simple addition" $ parseListString "1 + 2 : []" `shouldBe` Right (Const (ConstList (Cons (Number (Integer 3)) Empty)))
+  --   it "Simple addition" $ parseArithmicString "1 + 2 : []" `shouldBe` Right (Const (ConstList (Cons (Number (Integer 3)) Empty)))
   describe "Testing list with booleans:" $ do 
-    it "One boolean" $ parseListString "True : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) Empty)))
-    it "Mulitple booleans" $ parseListString "True : False : True : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) (Cons (Boole False) (Cons (Boole True) Empty)))))
+    it "One boolean" $ parseArithmicString "True : []" `shouldBe` Right (App (App (Prim ListCons) (Const (Boole True))) (Const EmptyList)) --Right (Const (ConstList (Cons (Boole True) Empty)))
+    it "Mulitple booleans" $ parseArithmicString "True : False : True : []" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Boole True))) (Const (Boole False)))) (Const (Boole True)))) (Const EmptyList))  --Right (Const (ConstList (Cons (Boole True) (Cons (Boole False) (Cons (Boole True) Empty)))))
   -- describe "Testing list with different types:" $ do
-  --   it "Int and bool" $ parseListString "True : 1 : []" `shouldBe` Left "Parser error: Lists cannot have multiple types"
-    -- it "Int and bool" $ parseListString "True : 1 : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) (Cons (Number (Int 1)) Empty))))
+  --   it "Int and bool" $ parseArithmicString "True : 1 : []" `shouldBe` Left "Parser error: Lists cannot have multiple types"
+    -- it "Int and bool" $ parseArithmicString "True : 1 : []" `shouldBe` Right (Const (ConstList (Cons (Boole True) (Cons (Number (Int 1)) Empty))))
 
 testLet = hspec $ do
   describe "Testing let expressions" $ do 

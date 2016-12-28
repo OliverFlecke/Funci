@@ -20,6 +20,15 @@ basicTests = hspec $ do
     it "evaluate boolean" $ do 
       evaluateString "main = True" `shouldBe` (B True)
       evaluateString "main = False" `shouldBe` (B False)
+  describe "Basic lists" $ do 
+    it "Empty list" $ evaluateString "main = []" `shouldBe` Nil
+    it "List of integers" $ do
+      evaluateString "main = 1 : 2 : 3 : []" `shouldBe` (LCons (I 1) (LCons (I 2) (LCons (I 3) Nil)))
+      evaluateString "main = [1,2,3]" `shouldBe` (LCons (I 1) (LCons (I 2) (LCons (I 3) Nil)))
+      evaluateString "main = 1.0 : 2.0 : 3.0 : []" `shouldBe` (LCons (F 1.0) (LCons (F 2.0) (LCons (F 3.0) Nil)))
+      evaluateString "main = [1.0,2.0,3.0]" `shouldBe` (LCons (F 1) (LCons (F 2) (LCons (F 3) Nil)))
+    it "List of booleans" $ do 
+      evaluateString "main = True : False : True : []" `shouldBe` (LCons (B True) (LCons (B False) (LCons (B True) Nil)))
 
 arithmicTests = hspec $ do 
   describe "Evaluate numbering arithmics:" $ do 
