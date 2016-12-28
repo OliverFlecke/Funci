@@ -18,7 +18,7 @@ main = do
 
 -- Testing all the arithmic operations
 testArithmics = hspec $ do 
-  describe "Simple arithmic operations" $ do 
+  describe "Simple arithmic operations with integers" $ do 
     it "is testing simple addition operations" $ do 
       parseArithmicString "2 + 3" `shouldBe` Right (App (App (Prim Add) (Const (Number (Integer 2)))) (Const (Number (Integer 3))))
       parseArithmicString "1 + 2 + 3" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
@@ -44,11 +44,43 @@ testArithmics = hspec $ do
     it "is testing interleaving multiplcation and division operations" $ do 
       parseArithmicString "1 * 2 / 3" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Mul) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
       parseArithmicString "1 / 2 * 3" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Div) (Const (Number (Integer 1)))) (Const (Number (Integer 2))))) (Const (Number (Integer 3))))
+    it "Testing reminder operator" $ do 
+      parseArithmicString "5 % 2" `shouldBe` Right (App (App (Prim Rem) (Const (Number (Integer 5)))) (Const (Number (Integer 2))))
+      parseArithmicString "5 % 2 % 2" `shouldBe` Right (App (App (Prim Rem) (App (App (Prim Rem) (Const (Number (Integer 5)))) (Const (Number (Integer 2))))) (Const (Number (Integer 2))))
+    it "Testing Parentesics" $ do 
+      parseArithmicString "2 * (1 + 3)" `shouldBe` Right (App (App (Prim Mul) (Const (Number (Integer 2)))) (App (App (Prim Add) (Const (Number (Integer 1)))) (Const (Number (Integer 3)))))
+  describe "Simple arithmic operations with floating points" $ do 
+    it "is testing simple addition operations" $ do 
+      parseArithmicString "2.0 + 3.0" `shouldBe` Right (App (App (Prim Add) (Const (Number (Floating 2.0)))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 + 2.0 + 3.0" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Add) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 + 2.0 + 3.0 + 4.0 + 5.0" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Add) (App (App (Prim Add) (App (App (Prim Add) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))) (Const (Number (Floating 4.0))))) (Const (Number (Floating 5.0))))
+    it "is testing simple multiplcation programs" $ do
+      parseArithmicString "1.0 * 2.0" `shouldBe` Right (App (App (Prim Mul) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))
+      parseArithmicString "1.0 * 2.0 * 3.0" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Mul) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 * 2.0 * 3.0 * 4.0 * 5.0" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Mul) (App (App (Prim Mul) (App (App (Prim Mul) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))) (Const (Number (Floating 4.0))))) (Const (Number (Floating 5.0))))
+    it "is testing interleaving addition and multiplcation operations" $ do 
+      parseArithmicString "1.0 * 2.0 + 3.0" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Mul) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 + 2.0 * 3.0" `shouldBe` Right (App (App (Prim Add) (Const (Number (Floating 1.0)))) (App (App (Prim Mul) (Const (Number (Floating 2.0)))) (Const (Number (Floating 3.0)))))
+      parseArithmicString "1.0 * 2.0 + 3.0 * 4.0" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Mul) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (App (App (Prim Mul) (Const (Number (Floating 3.0)))) (Const (Number (Floating 4.0)))))
+    it "is testing simple subtration operations" $ do 
+      parseArithmicString "2.0 - 1.0" `shouldBe` Right (App (App (Prim Sub) (Const (Number (Floating 2.0)))) (Const (Number (Floating 1.0))))
+      parseArithmicString "3.0 - 2.0 - 1.0" `shouldBe` Right (App (App (Prim Sub) (App (App (Prim Sub) (Const (Number (Floating 3.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 1.0))))
+    it "is testing simple division operations" $ do 
+      parseArithmicString "1.0 / 2.0" `shouldBe` Right (App (App (Prim Div) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))
+      parseArithmicString "1.0 / 2.0 / 3.0" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Div) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 / 0" `shouldBe` Left "Arithmic error: Divide by zero"
+    it "is testing interleaving addition and subtration operations" $ do
+      parseArithmicString "1.0 + 2.0 - 3.0" `shouldBe` Right (App (App (Prim Sub) (App (App (Prim Add) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 - 2.0 + 3.0" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Sub) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+    it "is testing interleaving multiplcation and division operations" $ do 
+      parseArithmicString "1.0 * 2.0 / 3.0" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Mul) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
+      parseArithmicString "1.0 / 2.0 * 3.0" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Div) (Const (Number (Floating 1.0)))) (Const (Number (Floating 2.0))))) (Const (Number (Floating 3.0))))
   describe "Arithmics with variables" $ do 
     it "Addition" $       parseArithmicString "x + y" `shouldBe` Right (App (App (Prim Add) (Var "x")) (Var "y"))
     it "Subtraction" $    parseArithmicString "x - y" `shouldBe` Right (App (App (Prim Sub) (Var "x")) (Var "y"))
     it "Multiplcation" $  parseArithmicString "x * y" `shouldBe` Right (App (App (Prim Mul) (Var "x")) (Var "y"))
     it "Division" $       parseArithmicString "x / y" `shouldBe` Right (App (App (Prim Div) (Var "x")) (Var "y"))
+    it "Reminder" $       parseArithmicString "x % y" `shouldBe` Right (App (App (Prim Rem) (Var "x")) (Var "y"))
 
 -- Testing booleans
 testBooleans = hspec $ do 

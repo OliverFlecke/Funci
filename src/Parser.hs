@@ -170,9 +170,9 @@ parseFExpr :: [Token] -> Either String (Expr, [Token])
 parseFExpr (Num (Integer i) : rest)   = return (Const (Number (Integer i)), rest)
 parseFExpr (Num (Floating n) : rest) = return (Const (Number (Floating n)), rest)
 parseFExpr (Identifier x : rest)  = return (Var x, rest)
-parseFExpr (Bracket RightParen : rest) = 
+parseFExpr (Bracket LeftParen : rest) = 
   case parseSExpr rest of 
-    Right (expr, Bracket LeftParen : rest') -> return (expr, rest')
+    Right (expr, Bracket RightParen : rest') -> return (expr, rest')
     Right (expr, rest')                     -> Left $ "Parse error: Expected `)` at " ++ (show rest)
     Left s                                  -> Left s
 parseFExpr tokens = Left $ "Parse error: Expecting a number or an `(` at " ++ (show tokens)
@@ -190,9 +190,10 @@ parsePExpr tokens = do
         Right (expr, Operator Div : rest')  -> do
           (exprs, rt, ops) <- parsePExpr' rest' 
           case exprs of -- Handling divide by zero
-            (Const (Number (Floating 0)):xs)   -> Left "Arithmic error: Divide by zero"
+            (Const (Number (Floating 0)):xs)  -> Left "Arithmic error: Divide by zero"
             (Const (Number (Integer 0)):xs)   -> Left "Arithmic error: Divide by zero"
             _             -> return (expr : exprs, rt, Div : ops)
+        Right (expr, Operator Rem : rest')  -> parsePExpr' rest' >>= concatExprUsingOp expr Rem
         Right (expr', rest')                -> return ([expr'], rest', [Mul])
         Left s                              -> Left s
 
