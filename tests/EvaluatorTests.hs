@@ -118,5 +118,7 @@ expressionTests = hspec $ do
     it "Let expressions with multiple variables" $ do 
       evaluateString "main = let x = 1, y = 2 in x + y" `shouldBe` (Number (I 3))
       evaluateString "main = let x = True, y = False in y && x" `shouldBe` (Boolean False)
-
+    it "If then else expressions:" $ do 
+      evaluateString "main = if True then 1 else 0" `shouldBe` (Number (I 1))
+      evaluateString "main = if False then 1 else 0" `shouldBe` (Number (I 0))
 

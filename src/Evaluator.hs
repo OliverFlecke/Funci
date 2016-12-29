@@ -22,27 +22,17 @@ evalE g (Var x)   =
   case E.lookup g x of 
     Just n  -> n
     Nothing -> error $ "Variable was not in the environment" ++ (show g)
--- evalE g (Const (Number n)) = n 
--- evalE g (Const (Boole b))             = B b
-
--- evalE g (Const (ConstList Empty)) = Nil
--- evalE g (Const (ConstList l)) = error (show l)
-  -- let l' = evalE g l 
-  -- in case s of 
-    -- Const (Number (Integer n)) -> LCons (I n) l'
-    -- s -> error (show s)
-
-
--- evalE g (Prim ListCons) = Listy Empty
--- evalE g (App (App (Prim ListCons) e1) e2) = 
---   case evalE g e1 of 
---     I i -> Cons i (evalE g e2)
---     _   -> error "Only list of integer is supported"
 
 evalE g (LetIn ((x, e):[]) b) = let g' = E.add g (x, evalE g e) 
                                 in evalE g' b
 evalE g (LetIn ((x, e):xs) b) = let g' = E.add g (x, evalE g e)
                                 in evalE g' (LetIn xs b)
+
+evalE g (IfThenElse b t f) =
+  case evalE g b of 
+    Boolean True  -> evalE g t 
+    Boolean False -> evalE g f
+    _             -> error $ (show b) ++ " - This should return a boolean value"
 
 evalE g (Prim op) = P op []
 evalE g (App a b) = case evalE g a of 
@@ -53,6 +43,7 @@ evalE g (App a b) = case evalE g a of
 
 evalE g e = error $ show e
 
+-- Evaluate operators
 evalOp :: Operator -> [Value] -> Value
 evalOp Add [Number (I x), Number (I y)] = Number (I $ x + y) 
 evalOp Add [Number (F x), Number (F y)] = Number (F $ x + y) 
