@@ -58,15 +58,15 @@ lexer (':':cs) = addToken (Operator ListCons) cs
 lexer (',':cs) = addToken (Operator Comma) cs
 
 -- Find boolean values
-lexer ('T':'r':'u':'e' : cs) = addToken (Boolean True) cs
-lexer ('F':'a':'l':'s':'e' : cs) = addToken (Boolean False) cs
+lexer ('T':'r':'u':'e' : cs) = addToken (Booly True) cs
+lexer ('F':'a':'l':'s':'e' : cs) = addToken (Booly False) cs
 
 -- Find digits in the string 
 lexer (c : cs) | isDigit c = 
   let (digits, cs') = break (not . isDigitOrDot) $ c:cs
   in case countDots digits of 
-    0 -> addToken (Num (Integer (read digits))) cs'
-    1 -> addToken (Num (Floating (read digits))) cs'
+    0 -> addToken (Num (I (read digits))) cs'
+    1 -> addToken (Num (F (read digits))) cs'
     _ -> Left "Could not parse: number contains too many '.'"
   where 
     isDigitOrDot :: Char -> Bool 

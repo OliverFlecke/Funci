@@ -79,7 +79,7 @@ checkOps ops f t =
 -- Parsing basics like numbers and boolean
 parseBase :: [Token] -> Either String (Expr, [Token])
 parseBase (Num n : rest)              = return (Const (Number n), rest)
-parseBase (Boolean b : rest)          = return (Const (Boole b), rest)
+parseBase (Booly b : rest)          = return (Const (Boolean b), rest)
 parseBase (Identifier x : rest)       = return (Var x, rest)
 parseBase t = Left $ "Parse error: Expecting a number or an `(` at " ++ (show t)
 
@@ -91,10 +91,10 @@ parse1Expr (Bracket LeftParen : rest) =
     Right (expr, Bracket RightParen : rest')  -> return (expr, rest')
     Right (expr, rest')                       -> Left $ "Parser error: Expected `)` at " ++ (show rest)
     Left s                                    -> Left s      
-parse1Expr (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = return (Const EmptyList, rest)
+parse1Expr (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = return (Const (Listy Empty), rest)
 parse1Expr (Bracket LeftSquareBracket : rest) = 
   case parse15Expr rest of 
-    Right (expr, Bracket RightSquareBracket : rest')  -> return (App (App (Prim ListCons) expr) (Const EmptyList), rest')           
+    Right (expr, Bracket RightSquareBracket : rest')  -> return (App (App (Prim ListCons) expr) (Const (Listy Empty)), rest')           
     Right (expr, rest')                               -> Left $ "Parser error: Expected `)` at " ++ (show rest)
     Left s                                            -> Left s  
 parse1Expr t = parseBase t
@@ -122,11 +122,24 @@ parse12Expr t = checkOps [Or] parse11Expr t >>= foldOperators
 
 parse15Expr :: [Token] -> Either String (Expr, [Token])
 parse15Expr t = checkOps [ListCons] parse12Expr t >>= foldOperators
+-- parse15Expr t = do 
+--   ((e : exprs), r, ops) <- helper t
+--   -- error $ (show (e : exprs))
+--   return (foldr (applyOperator ListCons) e exprs, r)
+--   where 
+--     helper t = 
+--       case parse12Expr t of 
+--         Right (expr, Operator ListCons : rest)  -> helper rest >>= concatExprUsingOp expr ListCons
+--         Right (expr, rest)                -> return ([expr], rest, []) 
+--         Left s                            -> Left s                                  
 
 
 -- Helper functions
 applyOperator :: Operator -> (Expr -> Expr -> Expr)
 applyOperator op = (\x -> (App (App (Prim op) x)))
+
+applyOperator2 :: Operator -> (Expr -> Expr -> Expr)
+applyOperator2 op = (\x y -> (App (App (Prim op) y) x))
 
 -- Create a list of functions to apply operators 
 createOpExprFuncs :: [Operator] -> [(Expr -> Expr -> Expr)]
@@ -145,3 +158,8 @@ foldlWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
 foldlWfs _ z [] = z 
 foldlWfs [] _ _ = error $ "This should not happen!"
 foldlWfs (f:fs) z (x:xs) = foldlWfs fs (f z x) xs
+
+foldrWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
+foldrWfs _ z [] = z 
+-- foldrWfs [] _ _ = error $ 
+foldrWfs (f:fs) z (x:xs) = f x (foldrWfs fs z xs)

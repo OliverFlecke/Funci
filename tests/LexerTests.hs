@@ -66,27 +66,27 @@ testListOperators = hspec $ do
 -- Testing Boolean operators
 testBoolean = hspec $ do
   describe "Testing boolean constants" $ do 
-    it "True" $ lexer "True" `shouldBe` Right [Boolean True]
-    it "False" $ lexer "False" `shouldBe` Right [Boolean False]
+    it "True" $ lexer "True" `shouldBe` Right [Booly True]
+    it "False" $ lexer "False" `shouldBe` Right [Booly False]
   describe "Testing the booloan operators:" $ do 
     it "And" $ lexer "&&" `shouldBe` Right [Operator And]
     it "Or" $ lexer "||" `shouldBe` Right [Operator Or]
     it "Not" $ lexer "!" `shouldBe` Right [Operator Not]
   describe "Testing boolean expression lexing" $ do 
-    it "True and True" $ lexer "True && True" `shouldBe` Right [Boolean True, Operator And, Boolean True]
-    it "True or False" $ lexer "True || False" `shouldBe` Right [Boolean True, Operator Or, Boolean False]
-    it "Not True" $ lexer "!True" `shouldBe` Right [Operator Not, Boolean True]
-    it "Not False" $ lexer "!False" `shouldBe` Right [Operator Not, Boolean False]
+    it "True and True" $ lexer "True && True" `shouldBe` Right [Booly True, Operator And, Booly True]
+    it "True or False" $ lexer "True || False" `shouldBe` Right [Booly True, Operator Or, Booly False]
+    it "Not True" $ lexer "!True" `shouldBe` Right [Operator Not, Booly True]
+    it "Not False" $ lexer "!False" `shouldBe` Right [Operator Not, Booly False]
 
 -- Test that numbers are being converted correctly 
 testNumbers = hspec $ do 
   describe "Testing number conversions" $ do 
     it "Integers" $ do
-      lexer "10" `shouldBe` Right [Num (Integer 10)]
-      lexer "123456" `shouldBe` Right [Num (Integer 123456)]
+      lexer "10" `shouldBe` Right [Num (I 10)]
+      lexer "123456" `shouldBe` Right [Num (I 123456)]
     it "Floating points" $ do
-      lexer "12.34" `shouldBe` Right [Num (Floating 12.34)]
-      lexer "12.84" `shouldBe` Right [Num (Floating 12.84)]
+      lexer "12.34" `shouldBe` Right [Num (F 12.34)]
+      lexer "12.84" `shouldBe` Right [Num (F 12.84)]
     it "Floating points with mulitipul '.'. Should throw an error (Left)" $ do
       lexer "12.34.5" `shouldBe` Left "Could not parse: number contains too many '.'" 
 
@@ -103,36 +103,36 @@ testKeywords = hspec $ do
       lexer "case of" `shouldBe` Right [Keyword Case, Keyword Of]
       lexer "let in" `shouldBe` Right [Keyword Let, Keyword In]
       lexer "abc" `shouldBe` Right [Identifier "abc"]
-      lexer "a = 10" `shouldBe` Right [Identifier "a", Operator Assignment, Num (Integer 10)]
+      lexer "a = 10" `shouldBe` Right [Identifier "a", Operator Assignment, Num (I 10)]
       lexer "$" `shouldBe` Left "Unexpected character: \t$\n                      \t^"
     it "Valid programs" $ do 
-      lexer "let x = 1 in x" `shouldBe` Right [Keyword Let, Identifier "x", Operator Assignment, Num (Integer 1), Keyword In, Identifier "x"]
+      lexer "let x = 1 in x" `shouldBe` Right [Keyword Let, Identifier "x", Operator Assignment, Num (I 1), Keyword In, Identifier "x"]
 
 -- Test that comments are removed
 testComments = hspec $ do 
   describe "Testing that comments are removed" $ do
     it "Should only return the code, not the comment" $ do
       lexer "-- This is a comment * + \n" `shouldBe` Right []
-      lexer "-- This is a comment * + \n3" `shouldBe` Right [Num (Integer 3)]
+      lexer "-- This is a comment * + \n3" `shouldBe` Right [Num (I 3)]
 
 -- Test that arithmics are lexed correctly
 testArithmics = hspec $ do 
   describe "Testing the lexing of arithmic strings" $ do 
     it "Testing each operator with numbers" $ do 
-      lexer "2 + 3" `shouldBe` Right [Num (Integer 2), Operator Add, Num (Integer 3)]
-      lexer "1 - 2" `shouldBe` Right [Num (Integer 1), Operator Sub, Num (Integer 2)]
-      lexer "1 * 2" `shouldBe` Right [Num (Integer 1), Operator Mul, Num (Integer 2)]
-      lexer "1 / 2" `shouldBe` Right [Num (Integer 1), Operator Div, Num (Integer 2)]
+      lexer "2 + 3" `shouldBe` Right [Num (I 2), Operator Add, Num (I 3)]
+      lexer "1 - 2" `shouldBe` Right [Num (I 1), Operator Sub, Num (I 2)]
+      lexer "1 * 2" `shouldBe` Right [Num (I 1), Operator Mul, Num (I 2)]
+      lexer "1 / 2" `shouldBe` Right [Num (I 1), Operator Div, Num (I 2)]
     it "Test cases with interleaving operators" $ do
-      lexer "1 + 2 * 3" `shouldBe` Right [Num (Integer 1), Operator Add, Num (Integer 2), Operator Mul, Num (Integer 3)]
-      lexer "1 * 2 + 3" `shouldBe` Right [Num (Integer 1), Operator Mul, Num (Integer 2), Operator Add, Num (Integer 3)]
-      lexer "1 / 2 - 3" `shouldBe` Right [Num (Integer 1), Operator Div, Num (Integer 2), Operator Sub, Num (Integer 3)]
-      lexer "1 - 2 / 3" `shouldBe` Right [Num (Integer 1), Operator Sub, Num (Integer 2), Operator Div, Num (Integer 3)]
+      lexer "1 + 2 * 3" `shouldBe` Right [Num (I 1), Operator Add, Num (I 2), Operator Mul, Num (I 3)]
+      lexer "1 * 2 + 3" `shouldBe` Right [Num (I 1), Operator Mul, Num (I 2), Operator Add, Num (I 3)]
+      lexer "1 / 2 - 3" `shouldBe` Right [Num (I 1), Operator Div, Num (I 2), Operator Sub, Num (I 3)]
+      lexer "1 - 2 / 3" `shouldBe` Right [Num (I 1), Operator Sub, Num (I 2), Operator Div, Num (I 3)]
     it "Test cases with floating point numbers" $ do 
-      lexer "1.2 + 3" `shouldBe` Right [Num (Floating 1.2), Operator Add, Num (Integer 3)]
-      lexer "1 + 2.3" `shouldBe` Right [Num (Integer 1), Operator Add, Num (Floating 2.3)]
-      lexer "1.2 + 3.4" `shouldBe` Right [Num (Floating 1.2), Operator Add, Num (Floating 3.4)]
-      lexer "1.2 * 3.4" `shouldBe` Right [Num (Floating 1.2), Operator Mul, Num (Floating 3.4)]
+      lexer "1.2 + 3" `shouldBe` Right [Num (F 1.2), Operator Add, Num (I 3)]
+      lexer "1 + 2.3" `shouldBe` Right [Num (I 1), Operator Add, Num (F 2.3)]
+      lexer "1.2 + 3.4" `shouldBe` Right [Num (F 1.2), Operator Add, Num (F 3.4)]
+      lexer "1.2 * 3.4" `shouldBe` Right [Num (F 1.2), Operator Mul, Num (F 3.4)]
 
 -- testLists = hspec $ do 
 --   describe "Testing basic list construction:" $ do 

@@ -5,19 +5,6 @@ import Lexer
 import Parser
 import qualified Environment as E
 
-type VEnv = E.Env Value 
-
--- This is the values which the program should be able to return
-data Value = I Int
-           | F Float
-           | B Bool
-           | Nil
-           | LCons Value Value
-           | Fun VEnv [Char] [[Char]] Expr
-           | P Operator [Value]
-           | C Id [Value]
-           deriving (Show, Eq)
-
 evaluateString :: String -> Value
 evaluateString s = do 
     let Right ts = lexer s
@@ -30,16 +17,24 @@ evaluate (Bind "main" _ _ body:rest) = evalE E.empty body
 evaluate p = error $ show p
 
 evalE :: VEnv -> Expr -> Value 
-evalE g (Const (Number (Integer n)))  = I n 
-evalE g (Const (Number (Floating n))) = F n 
-evalE g (Const (Boole b))             = B b
+evalE g (Const n) = n
+-- evalE g (Const (Number n)) = n 
+-- evalE g (Const (Boole b))             = B b
 
-evalE g (Const (ConstList Empty)) = Nil
-evalE g (Const (ConstList l)) = error (show l)
+-- evalE g (Const (ConstList Empty)) = Nil
+-- evalE g (Const (ConstList l)) = error (show l)
   -- let l' = evalE g l 
   -- in case s of 
     -- Const (Number (Integer n)) -> LCons (I n) l'
     -- s -> error (show s)
+
+
+-- evalE g (Prim ListCons) = Listy Empty
+-- evalE g (App (App (Prim ListCons) e1) e2) = 
+--   case evalE g e1 of 
+--     I i -> Cons i (evalE g e2)
+--     _   -> error "Only list of integer is supported"
+
 
 evalE g (Prim op) = P op []
 evalE g (App a b) = case evalE g a of 
@@ -51,30 +46,34 @@ evalE g (App a b) = case evalE g a of
 evalE g e = error $ show e
 
 evalOp :: Operator -> [Value] -> Value
-evalOp Add [I x, I y] = I (x + y) 
-evalOp Add [F x, F y] = F (x + y) 
-evalOp Sub [I x, I y] = I (x - y)
-evalOp Sub [F x, F y] = F (x - y)
-evalOp Mul [I x, I y] = I (x * y)
-evalOp Mul [F x, F y] = F (x * y)
-evalOp Div [I x, I y] = I (quot x y)
-evalOp Div [F x, F y] = F (x / y)
-evalOp Mod [I x, I y] = I (mod x y)
+evalOp Add [Number (I x), Number (I y)] = Number (I $ x + y) 
+evalOp Add [Number (F x), Number (F y)] = Number (F $ x + y) 
+evalOp Sub [Number (I x), Number (I y)] = Number (I $ x - y)
+evalOp Sub [Number (F x), Number (F y)] = Number (F $ x - y)
+evalOp Mul [Number (I x), Number (I y)] = Number (I $ x * y)
+evalOp Mul [Number (F x), Number (F y)] = Number (F $ x * y)
+evalOp Div [Number (I x), Number (I y)] = Number (I $ quot x y)
+evalOp Div [Number (F x), Number (F y)] = Number (F $ x / y)
+evalOp Mod [Number (I x), Number (I y)] = Number (I $ mod x y)
 
-evalOp Not [B b]      = B (not b)
-evalOp And [B x, B y] = B (x && y) 
-evalOp Or  [B x, B y] = B (x || y)
+evalOp Not [Boolean b]      = Boolean (not b)
+evalOp And [Boolean x, Boolean y] = Boolean (x && y) 
+evalOp Or  [Boolean x, Boolean y] = Boolean (x || y)
 
-evalOp Eq  [I x, I y] = B (x == y)
-evalOp Eq  [F x, F y] = B (x == y)
-evalOp Ne  [I x, I y] = B (not $ x == y)
-evalOp Ne  [F x, F y] = B (not $ x == y)
-evalOp Gt  [I x, I y] = B (x > y)
-evalOp Gt  [F x, F y] = B (x > y)
-evalOp Lt  [I x, I y] = B (x < y)
-evalOp Lt  [F x, F y] = B (x < y)
-evalOp Ge  [I x, I y] = B (x >= y)
-evalOp Ge  [F x, F y] = B (x >= y)
-evalOp Le  [I x, I y] = B (x <= y)
-evalOp Le  [F x, F y] = B (x <= y)
+evalOp Eq  [Number (I x), Number (I y)] = Boolean (x == y)
+evalOp Eq  [Number (F x), Number (F y)] = Boolean (x == y)
+evalOp Ne  [Number (I x), Number (I y)] = Boolean (not $ x == y)
+evalOp Ne  [Number (F x), Number (F y)] = Boolean (not $ x == y)
+evalOp Gt  [Number (I x), Number (I y)] = Boolean (x > y)
+evalOp Gt  [Number (F x), Number (F y)] = Boolean (x > y)
+evalOp Lt  [Number (I x), Number (I y)] = Boolean (x < y)
+evalOp Lt  [Number (F x), Number (F y)] = Boolean (x < y)
+evalOp Ge  [Number (I x), Number (I y)] = Boolean (x >= y)
+evalOp Ge  [Number (F x), Number (F y)] = Boolean (x >= y)
+evalOp Le  [Number (I x), Number (I y)] = Boolean (x <= y)
+evalOp Le  [Number (F x), Number (F y)] = Boolean (x <= y)
+
+evalOp ListCons [Listy Empty, v] = Listy (Cons v Empty)
+evalOp ListCons [v, Listy l] = Listy (Cons v l) 
+
 evalOp op vs = P op vs

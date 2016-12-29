@@ -12,7 +12,7 @@ import Data.Traversable (Traversable)
 import Data.Monoid
 import Prelude hiding (lookup)
 
-newtype Env e = Env (M.Map String e) deriving (Functor, Foldable, Traversable, Show, Eq, Monoid)
+newtype Env e = Env (M.Map String e) deriving (Functor, Foldable, Traversable, Read, Show, Eq, Ord, Monoid)
 
 empty :: Env e
 empty = Env M.empty
