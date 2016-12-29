@@ -11,6 +11,7 @@ main = do
   arithmicTests
   booleanArithmicTests
   compareOperatorTests
+  expressionTests
 
 basicTests = hspec $ do 
   describe "Evaluate basics" $ do 
@@ -105,5 +106,17 @@ compareOperatorTests = hspec $ do
       evaluateString "main = 1.0 <= 0.0" `shouldBe` (Boolean False)
       evaluateString "main = 0.0 <= 1.0" `shouldBe` (Boolean True)
       evaluateString "main = 1.0 <= 1.0" `shouldBe` (Boolean True)
+
+expressionTests = hspec $ do 
+  describe "Testing let expressions -" $ do 
+    it "Simple let" $ do
+      evaluateString "main = let x = 1 in x" `shouldBe` (Number (I 1))
+      evaluateString "main = let y = True in y" `shouldBe` (Boolean True)
+    it "Let with arithmics" $ do 
+      evaluateString "main = let x = 1 in x + 1" `shouldBe` (Number (I 2))
+      evaluateString "main = let x = True in x || False" `shouldBe` (Boolean True)
+    it "Let expressions with multiple variables" $ do 
+      evaluateString "main = let x = 1, y = 2 in x + y" `shouldBe` (Number (I 3))
+      evaluateString "main = let x = True, y = False in y && x" `shouldBe` (Boolean False)
 
 

@@ -18,6 +18,10 @@ evaluate p = error $ show p
 
 evalE :: VEnv -> Expr -> Value 
 evalE g (Const n) = n
+evalE g (Var x)   = 
+  case E.lookup g x of 
+    Just n  -> n
+    Nothing -> error $ "Variable was not in the environment" ++ (show g)
 -- evalE g (Const (Number n)) = n 
 -- evalE g (Const (Boole b))             = B b
 
@@ -35,6 +39,10 @@ evalE g (Const n) = n
 --     I i -> Cons i (evalE g e2)
 --     _   -> error "Only list of integer is supported"
 
+evalE g (LetIn ((x, e):[]) b) = let g' = E.add g (x, evalE g e) 
+                                in evalE g' b
+evalE g (LetIn ((x, e):xs) b) = let g' = E.add g (x, evalE g e)
+                                in evalE g' (LetIn xs b)
 
 evalE g (Prim op) = P op []
 evalE g (App a b) = case evalE g a of 

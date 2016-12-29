@@ -23,6 +23,10 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.2.2  -- 2016-12-29 
+* Fixed parser error when parsing let expressions with multiple variables
+* Evaluator can now evaluate let expressions
+
 #### 0.1.2.1  -- 2016-12-29 
 * Parser now handles list correctly.
     * The sugar syntax is not handle with the current version (that is [1:2:3])

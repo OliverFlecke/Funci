@@ -12,15 +12,6 @@ data NumType = I Int
   | F Float 
   deriving (Read, Show, Eq, Ord)
 
--- data Type = 
---   Number NumType
---   | Boole Bool
---   | ConstList (List Type)
---   | EmptyList
---   deriving (Read, Show, Eq, Ord)
-
-
-
 -- Tokens which the input can be transformed into
 data Token = 
   Num NumType 

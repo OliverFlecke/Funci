@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                Funci
-version:             0.1.2.1
+version:             0.1.2.2
 synopsis:            Compiler to parse and compile a functional language, working title "Funci"
 description:         This projects focus on building a simple compiler for a functional language. This is not intended to be something for real use, but only for learning.   
 license:             BSD3

@@ -144,6 +144,10 @@ testLet = hspec $ do
     it "Testing numbers and boolean" $ do 
       parseExpressionsString "let x = 1, y = 2 in x + y" `shouldBe` Right (LetIn [("x", (Const (Number (I 1)))), ("y", (Const (Number (I 2))))] (App (App (Prim Add) (Var "x")) (Var "y")))
       parseExpressionsString "let x = 1, y = True in y" `shouldBe` Right (LetIn [("x", (Const (Number (I 1)))), ("y", (Const (Boolean True)))] (Var "y"))
+      parseExpressionsString "let x = 1, y = True in y && True" `shouldBe` Right (LetIn [("x", (Const (Number (I 1)))), ("y", (Const (Boolean True)))] (App (App (Prim And) (Var "y")) (Const (Boolean True))))
+  describe "Parsing full programs with let expressions" $ do 
+    it "Multiple variables" $ do
+      parseString "main = let x = 1, y = True in y && True" `shouldBe` Right [Bind "main" Nothing [] (LetIn [("x", (Const (Number (I 1)))), ("y", (Const (Boolean True)))] (App (App (Prim And) (Var "y")) (Const (Boolean True))))]
 
 testIfThenElse = hspec $ do 
   describe "Testing simple if then else expressions" $ do

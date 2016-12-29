@@ -39,7 +39,7 @@ parseExpressions (Keyword Let : rest) = parseLet rest
           return $ (LetIn [(x, e)] body, rest'')
         Right (e, Operator Comma : rest') -> do 
           (LetIn xs body, rest'') <- parseLet rest' 
-          return $ (LetIn ((x, e):xs) body, rest)
+          return $ (LetIn ((x, e):xs) body, rest'')
         Left s                            -> Left s
         _                                 -> error "Let error"
 
