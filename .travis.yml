@@ -1,6 +1,7 @@
 language: haskell
 ghc:
   - 8.0
+  - 7
 
 install:
   cabal sandbox init &&
@@ -13,3 +14,4 @@ branches:
   only:
     - master
     - stable
+    - travis
