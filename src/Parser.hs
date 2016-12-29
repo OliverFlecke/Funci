@@ -92,11 +92,11 @@ parse1Expr (Bracket LeftParen : rest) =
     Right (expr, rest')                       -> Left $ "Parser error: Expected `)` at " ++ (show rest)
     Left s                                    -> Left s      
 parse1Expr (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = return (Const (Listy Empty), rest)
-parse1Expr (Bracket LeftSquareBracket : rest) = 
-  case parse15Expr rest of 
-    Right (expr, Bracket RightSquareBracket : rest')  -> return (App (App (Prim ListCons) expr) (Const (Listy Empty)), rest')           
-    Right (expr, rest')                               -> Left $ "Parser error: Expected `)` at " ++ (show rest)
-    Left s                                            -> Left s  
+-- parse1Expr (Bracket LeftSquareBracket : rest) = 
+--   case parse15Expr rest of 
+--     Right (expr, Bracket RightSquareBracket : rest')  -> return (App (App (Prim ListCons) expr) (Const (Listy Empty)), rest')           
+--     Right (expr, rest')                               -> Left $ "Parser error: Expected `)` at " ++ (show rest)
+--     Left s                                            -> Left s  
 parse1Expr t = parseBase t
 
 parse2Expr :: [Token] -> Either String (Expr, [Token])
@@ -121,18 +121,9 @@ parse12Expr :: [Token] -> Either String (Expr, [Token])
 parse12Expr t = checkOps [Or] parse11Expr t >>= foldOperators
 
 parse15Expr :: [Token] -> Either String (Expr, [Token])
-parse15Expr t = checkOps [ListCons] parse12Expr t >>= foldOperators
--- parse15Expr t = do 
---   ((e : exprs), r, ops) <- helper t
---   -- error $ (show (e : exprs))
---   return (foldr (applyOperator ListCons) e exprs, r)
---   where 
---     helper t = 
---       case parse12Expr t of 
---         Right (expr, Operator ListCons : rest)  -> helper rest >>= concatExprUsingOp expr ListCons
---         Right (expr, rest)                -> return ([expr], rest, []) 
---         Left s                            -> Left s                                  
-
+parse15Expr t = do 
+  (exprs, r, ops) <- checkOps [ListCons] parse12Expr t
+  foldOperators (reverse exprs, r, ops)
 
 -- Helper functions
 applyOperator :: Operator -> (Expr -> Expr -> Expr)

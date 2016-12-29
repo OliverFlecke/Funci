@@ -23,6 +23,13 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.2.1  -- 2016-12-29 
+* Parser now handles list correctly.
+    * The sugar syntax is not handle with the current version (that is [1:2:3])
+    * Arithmics inside the list are being correctly parsed as well
+* Evaluator correctly evaluating list
+    * Arithmics inside the lists are being fully evaluated as well (1+2 : [] would be [3])
+
 ### 0.1.2.0   -- 2016-12-28 
 * The structure of how the operators are parsed have been completly changed. Every operator is now defined in the same language, where they follow the standard precedence order (from C and most programming languages). This has made it lot more clear what level each operator is working on. 
     * Note: No new operators have been added at this stage, so some of the precedence levels are not in use currently

@@ -119,15 +119,15 @@ testLists = hspec $ do
     it "Empty" $ parseArithmicString "[]" `shouldBe` Right (Const (Listy Empty))
     it "One int" $ parseArithmicString "1 : []" `shouldBe` Right (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 1)))) --Right (App (App (Prim ListCons) (Const (Number (I 1)))) (Const (Listy Empty)))
     it "Two numbers" $ parseArithmicString "1 : 2 : []" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 2))))) (Const (Number (I 1)))) --Right (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Number (I 1)))) (Const (Number (I 2))))) (Const (Listy Empty))) --Right (Const (ConstList (Cons (Number (I 1)) (Cons (Number (I 2)) Empty))))
-    -- it "Invalid syntax with empty list in the middle" $ parseArithmicString "1 : [] : 2" `shouldBe` Left "Parser error: Unable to construct list"
-  describe "Testing list constructing with commas" $ do 
-    it "Just one number" $ parseArithmicString "[1]" `shouldBe` Right (App (App (Prim ListCons) (Const (Number (I 1)))) (Const (Listy Empty))) --Right (Const (ConstList (Cons (Number (I 1)) Empty)))
-    it "Three numbers" $ parseArithmicString "[1:2:3]" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Number (I 1)))) (Const (Number (I 2))))) (Const (Number (I 3))))) (Const (Listy Empty))) --Right (Const (ConstList (Cons (Number (I 1)) (Cons (Number (I 2)) (Cons (Number (I 3) )Empty)))))
-  -- describe "Testing list containing arithmic expressions:" $ do
-  --   it "Simple addition" $ parseArithmicString "1 + 2 : []" `shouldBe` Right (Const (ConstList (Cons (Number (I 3)) Empty)))
+  -- describe "Testing list constructing with sugar syntax" $ do 
+  --   it "Just one number" $ parseArithmicString "[1]" `shouldBe` Right (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 1)))) --Right (Const (ConstList (Cons (Number (I 1)) Empty)))
+  --   it "Two numbers [1:2]" $ parseArithmicString "[1:2]" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 1))))) (Const (Number (I 2))))
+  --   it "Three numbers [1:2:3]" $ parseArithmicString "[1:2:3]" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 3))))) (Const (Number (I 2))))) (Const (Number (I 1)))) --(App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Number (I 1)))) (Const (Number (I 2))))) (Const (Number (I 3))))) (Const (Listy Empty))) --Right (Const (ConstList (Cons (Number (I 1)) (Cons (Number (I 2)) (Cons (Number (I 3) )Empty)))))
+  describe "Testing list containing arithmic expressions:" $ do
+    it "Simple addition" $ parseArithmicString "1 + 2 : []" `shouldBe` Right (App (App (Prim ListCons) (Const (Listy Empty))) (App (App (Prim Add) (Const (Number (I 1)))) (Const (Number (I 2)))))
   describe "Testing list with booleans:" $ do 
-    it "One boolean" $ parseArithmicString "True : []" `shouldBe` Right (App (App (Prim ListCons) (Const (Boolean True))) (Const (Listy Empty))) --Right (Const (ConstList (Cons (Boolean True) Empty)))
-    it "Mulitple booleans" $ parseArithmicString "True : False : True : []" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Boolean True))) (Const (Boolean False)))) (Const (Boolean True)))) (Const (Listy Empty)))  --Right (Const (ConstList (Cons (Boolean True) (Cons (Boolean False) (Cons (Boolean True) Empty)))))
+    it "One boolean" $ parseArithmicString "True : []" `shouldBe` Right (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Boolean True))) --Right (Const (ConstList (Cons (Boolean True) Empty)))
+    it "Mulitple booleans" $ parseArithmicString "True : False : True : []" `shouldBe` Right (App (App (Prim ListCons) (App (App (Prim ListCons) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Boolean True)))) (Const (Boolean False)))) (Const (Boolean True)))  --Right (Const (ConstList (Cons (Boolean True) (Cons (Boolean False) (Cons (Boolean True) Empty)))))
   -- describe "Testing list with different types:" $ do
   --   it "Int and bool" $ parseArithmicString "True : 1 : []" `shouldBe` Left "Parser error: Lists cannot have multiple types"
     -- it "Int and bool" $ parseArithmicString "True : 1 : []" `shouldBe` Right (Const (ConstList (Cons (Boolean True) (Cons (Number (Int 1)) Empty))))

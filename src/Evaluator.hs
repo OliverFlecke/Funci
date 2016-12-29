@@ -74,6 +74,6 @@ evalOp Le  [Number (I x), Number (I y)] = Boolean (x <= y)
 evalOp Le  [Number (F x), Number (F y)] = Boolean (x <= y)
 
 evalOp ListCons [Listy Empty, v] = Listy (Cons v Empty)
-evalOp ListCons [v, Listy l] = Listy (Cons v l) 
+evalOp ListCons [Listy l,     v] = Listy (Cons v l) 
 
 evalOp op vs = P op vs
