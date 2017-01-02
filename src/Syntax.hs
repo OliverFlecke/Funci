@@ -30,7 +30,7 @@ type VEnv = E.Env Value
 data Value = Number NumType
            | Boolean Bool
            | Listy (List Value)
-           | Fun VEnv [Char] [[Char]] Expr
+           | Fun VEnv [Id] Expr
            | P Operator [Value]
            | C Id [Value]
            deriving (Read, Show, Eq, Ord)

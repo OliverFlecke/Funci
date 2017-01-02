@@ -16,6 +16,7 @@ main = do
   testIfThenElse
   testExpressions
   testMainFunction
+  functionTests
 
 -- Testing all the arithmic operations
 testArithmics = hspec $ do 
@@ -169,3 +170,12 @@ testMainFunction = hspec $ do
     it "Main with boolean expression" $ parseString "main = True || False" `shouldBe` Right [Bind "main" Nothing [] (App (App (Prim Or) (Const (Boolean True))) (Const (Boolean False)))]
   describe "Testing with expressions inside the main function" $ do 
     it "With let expression" $ parseString "main = let x = 1 in x" `shouldBe` Right [Bind "main" Nothing [] (LetIn [("x", (Const (Number (I 1))))] (Var "x"))]
+
+functionTests = hspec $ do 
+  describe "Testing functions without variables" $ do 
+    it "No variables" $ do 
+      parseString "main = f; f = 1" `shouldBe` Right [Bind "main" Nothing [] (Var "f"), Bind "f" Nothing [] (Const (Number (I 1)))]
+  describe "Testing writing functions with one variable" $ do 
+    it "Calling a second function from main" $ do
+      parseString "main = f 1; f x = x" `shouldBe` Right [Bind "main" Nothing [] (App (Var "f") (Const (Number (I 1)))), Bind "f" Nothing ["x"] (Var "x")]
+      parseString "main = f True; f x = False" `shouldBe` Right [Bind "main" Nothing [] (App (Var "f") (Const (Boolean True))), Bind "f" Nothing ["x"] (Const (Boolean False))]

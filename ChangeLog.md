@@ -23,6 +23,9 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.2.4  -- 2017-01-02
+* Functions without parameters can now be called 
+
 #### 0.1.2.3  -- 2016-12-29
 * If-then-else expressions can now be evaluated
 

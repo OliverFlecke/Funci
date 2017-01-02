@@ -4,6 +4,9 @@ module Environment ( Env(..)
                  , lookup
                  , add
                  , addAll
+                 , update
+                 , union
+                 , keys
                  ) where
 
 import qualified Data.Map as M
@@ -21,7 +24,25 @@ lookup :: Env e -> String -> Maybe e
 lookup (Env env) var = M.lookup var env
 
 add :: Env e -> (String, e) -> Env e
-add (Env env) (key,elt) = Env (M.insert key elt env)
+add (Env env) (key, elt) = Env (M.insert key elt env)
 
-addAll :: Env e -> [(String,e)] -> Env e
+addAll :: Env e -> [(String, e)] -> Env e
 addAll (Env env) pairs = Env $ foldr (\(k,e) g -> M.insert k e g) env pairs
+
+update :: (e -> Maybe e) -> String -> Env e -> Env e 
+update f key (Env g) = Env $ M.update f key g 
+
+-- update :: Env e -> (String, e) -> Env e
+-- update (Env env) (key, v) = Env $ M.updateWithKey helper key env
+--   where helper k _ = if k == key 
+--                       then Just v 
+--                       else Nothing
+
+union :: Env e -> Env e -> Env e
+union (Env g) (Env g') = Env $ M.union g g'
+
+map :: (e -> e) -> Env e -> Env e 
+map f (Env g) = Env $ M.map f g
+
+keys :: Env e -> [String]
+keys (Env e) = M.keys e

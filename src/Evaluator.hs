@@ -1,4 +1,7 @@
-module Evaluator where
+module Evaluator (
+  evaluateString, 
+  evaluate
+  ) where
 
 import Syntax
 import Lexer
@@ -13,15 +16,25 @@ evaluateString s = do
         Left s  -> error s
 
 evaluate :: Program -> Value
-evaluate (Bind "main" _ _ body:rest) = evalE E.empty body
-evaluate p = error $ show p
+evaluate p = evalP E.empty p
 
+evalP :: VEnv -> Program -> Value 
+evalP g [] = 
+  case E.lookup g "main" of 
+    Just (Fun g' [] e)  -> evalE g e
+    Nothing             -> error $ "Could not find the main function"
+evalP g (Bind f _ vs e : rest) = 
+  let g' = E.add g (f, Fun E.empty vs e)
+  in evalP g' rest
+
+-- Evaluate an expression
 evalE :: VEnv -> Expr -> Value 
 evalE g (Const n) = n
 evalE g (Var x)   = 
   case E.lookup g x of 
-    Just n  -> n
-    Nothing -> error $ "Variable was not in the environment" ++ (show g)
+    Just (Fun g' vs e)  -> evalE (E.union g' g) e
+    Just n              -> n
+    Nothing -> error $ "Variable was not in the environment: " ++ (show x) ++ "\nEnv: " ++ (show g)
 
 evalE g (LetIn ((x, e):[]) b) = let g' = E.add g (x, evalE g e) 
                                 in evalE g' b

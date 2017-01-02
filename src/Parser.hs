@@ -15,14 +15,19 @@ parseString s = lexer s >>= parse
 
 parse :: [Token] -> Either String Program
 parse [] = Right []
-parse (Identifier id : Operator Assignment : rest) = 
-  case parseExpressions rest of 
-    Right (n, r)  -> do 
-      p <- parse r 
-      return $ Bind id Nothing [] n : p
-    _ -> Left $ "Parser error: Could not parse the function definition"
-
-parse tokens = undefined
+parse (Identifier id : rest) = 
+  let (rest', vs) = helper rest []
+  in  
+    case parseExpressions rest' of 
+      Right (n, r)  -> do 
+        p <- parse r 
+        return $ Bind id Nothing vs n : p
+      _ -> Left $ "Parser error: Could not parse the function definition"
+  where 
+    helper (Operator Assignment : rest) acc = (rest, acc)
+    helper (Identifier id : rest) acc    = helper rest (acc ++ [id])
+parse (Semicolon : rest) = parse rest
+parse tokens = error (show tokens)
 
 -- Parse let expression
 parseExpressionsString :: String -> Either String Expr 
@@ -78,9 +83,14 @@ checkOps ops f t =
 
 -- Parsing basics like numbers and boolean
 parseBase :: [Token] -> Either String (Expr, [Token])
-parseBase (Num n : rest)              = return (Const (Number n), rest)
-parseBase (Booly b : rest)          = return (Const (Boolean b), rest)
-parseBase (Identifier x : rest)       = return (Var x, rest)
+parseBase (Num n : rest)        = return (Const (Number n), rest)
+parseBase (Booly b : rest)      = return (Const (Boolean b), rest)
+-- parseBase (Identifier x : rest) = return (Var x, rest)
+parseBase (Identifier x : rest) = do 
+  case parseArithmic rest of 
+    Right (e, Semicolon : rest')  -> return (App (Var x) e, rest')  
+    _                             -> return (Var x, rest)
+    -- Left s                        -> return (Var x, rest)
 parseBase t = Left $ "Parse error: Expecting a number or an `(` at " ++ (show t)
 
 -- Operators with precedence level 1
@@ -129,9 +139,6 @@ parse15Expr t = do
 applyOperator :: Operator -> (Expr -> Expr -> Expr)
 applyOperator op = (\x -> (App (App (Prim op) x)))
 
-applyOperator2 :: Operator -> (Expr -> Expr -> Expr)
-applyOperator2 op = (\x y -> (App (App (Prim op) y) x))
-
 -- Create a list of functions to apply operators 
 createOpExprFuncs :: [Operator] -> [(Expr -> Expr -> Expr)]
 createOpExprFuncs [] = []
@@ -149,8 +156,3 @@ foldlWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
 foldlWfs _ z [] = z 
 foldlWfs [] _ _ = error $ "This should not happen!"
 foldlWfs (f:fs) z (x:xs) = foldlWfs fs (f z x) xs
-
-foldrWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
-foldrWfs _ z [] = z 
--- foldrWfs [] _ _ = error $ 
-foldrWfs (f:fs) z (x:xs) = f x (foldrWfs fs z xs)

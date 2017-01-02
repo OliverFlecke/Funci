@@ -12,6 +12,7 @@ main = do
   booleanArithmicTests
   compareOperatorTests
   expressionTests
+  functionTests
 
 basicTests = hspec $ do 
   describe "Evaluate basics" $ do 
@@ -122,3 +123,9 @@ expressionTests = hspec $ do
       evaluateString "main = if True then 1 else 0" `shouldBe` (Number (I 1))
       evaluateString "main = if False then 1 else 0" `shouldBe` (Number (I 0))
 
+functionTests = hspec $ do 
+  describe "Testing functions without parameters -" $ do 
+    it "Call function from main" $ do 
+      evaluateString "main = f; f = 1" `shouldBe` (Number (I 1))  
+    it "Calling function from function" $ do 
+      evaluateString "main = f; f = g; g = True" `shouldBe` (Boolean True)
