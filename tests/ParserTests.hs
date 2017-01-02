@@ -179,3 +179,5 @@ functionTests = hspec $ do
     it "Calling a second function from main" $ do
       parseString "main = f 1; f x = x" `shouldBe` Right [Bind "main" Nothing [] (App (Var "f") (Const (Number (I 1)))), Bind "f" Nothing ["x"] (Var "x")]
       parseString "main = f True; f x = False" `shouldBe` Right [Bind "main" Nothing [] (App (Var "f") (Const (Boolean True))), Bind "f" Nothing ["x"] (Const (Boolean False))]
+  describe "Testing parsing of mulitple parameters" $ do 
+    it "Two parameters" $ parseString "main = add 1 2; add x y = x + y" `shouldBe` Right [Bind "main" Nothing [] (App (App (Var "add") (Const (Number (I 1)))) (Const (Number (I 2)))), Bind "add" Nothing ["x","y"] (App (App (Prim Add) (Var "x")) (Var "y"))]

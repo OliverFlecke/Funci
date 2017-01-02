@@ -2,12 +2,12 @@
 
 # Todo list: 
 - [x] Get the HandParser to return the error messages properly instead of just calling error 
-- [ ] Write test cases for the Parser
+- [x] Write test cases for the Parser
     - [x] Add test cases for arithmic expressions
     - [x] Add test cases for boolean expressions
-    - [ ] Add test cases for lists 
-    - [ ] Add test cases for let expressions 
-    - [ ] Add test cases for if then else expressions
+    - [x] Add test cases for lists 
+    - [x] Add test cases for let expressions 
+    - [x] Add test cases for if then else expressions
 - [ ] Implement the Parser
     - [x] Implement the arithmic language for the parser
     - [x] Implement the boolean language for the parser
@@ -22,6 +22,9 @@
 
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
+
+#### 0.1.2.5  -- 2017-01-02 
+* Functions can now handle an appitrary number of arguments 
 
 #### 0.1.2.4  -- 2017-01-02
 * Functions without parameters can now be called 

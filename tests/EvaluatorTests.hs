@@ -129,3 +129,14 @@ functionTests = hspec $ do
       evaluateString "main = f; f = 1" `shouldBe` (Number (I 1))  
     it "Calling function from function" $ do 
       evaluateString "main = f; f = g; g = True" `shouldBe` (Boolean True)
+  describe "Testing functions with one parameter -" $ do 
+    it "Calling function with a number" $ do 
+      evaluateString "main = f 1; f x = x" `shouldBe` (Number (I 1))
+    it "Callning functions with booleans" $ do 
+      evaluateString "main = f True; f x = x" `shouldBe` (Boolean True)
+      evaluateString "main = not True; not x = !x" `shouldBe` (Boolean False)
+    it "Calling functions with expressions" $ do 
+      evaluateString "main = f 1 + 2; f x = x + 1" `shouldBe` (Number (I 4)) 
+  describe "Testing functions with multiple parameters -" $ do 
+    it "Calling functions with multiple numbers" $ do 
+      evaluateString "main = add 1 2; add x y = x + y" `shouldBe` (Number (I 3))

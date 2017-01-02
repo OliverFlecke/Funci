@@ -83,14 +83,23 @@ checkOps ops f t =
 
 -- Parsing basics like numbers and boolean
 parseBase :: [Token] -> Either String (Expr, [Token])
+parseBase (Semicolon : rest)    = return (End, rest)
 parseBase (Num n : rest)        = return (Const (Number n), rest)
 parseBase (Booly b : rest)      = return (Const (Boolean b), rest)
 -- parseBase (Identifier x : rest) = return (Var x, rest)
-parseBase (Identifier x : rest) = do 
-  case parseArithmic rest of 
-    Right (e, Semicolon : rest')  -> return (App (Var x) e, rest')  
-    _                             -> return (Var x, rest)
-    -- Left s                        -> return (Var x, rest)
+-- parseBase (Identifier x : rest) = do 
+--   case parseArithmic rest of 
+--     Right (e, Semicolon : rest')  -> return (App (Var x) e, rest')  
+--     _                             -> return (Var x, rest)
+--     -- Left s                        -> return (Var x, rest)
+parseBase (Identifier x : rest) = helper (Var x) rest
+  where 
+    helper :: Expr -> [Token] -> Either String (Expr, [Token])
+    helper a t = 
+      case parseArithmic t of 
+        Right (End, rest) -> return (a, rest)
+        Right (b, rest)   -> helper (App a b) rest
+        _                 -> return (a, t)
 parseBase t = Left $ "Parse error: Expecting a number or an `(` at " ++ (show t)
 
 -- Operators with precedence level 1

@@ -38,7 +38,8 @@ data Value = Number NumType
 -- And this is what the parser should output 
 -- (eventually turned into a valid program)
 data Expr = 
-  Const Value
+  End
+  | Const Value
   | Var Id 
   | Prim Operator
   | App Expr Expr 

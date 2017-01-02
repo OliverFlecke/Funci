@@ -22,7 +22,7 @@ evalP :: VEnv -> Program -> Value
 evalP g [] = 
   case E.lookup g "main" of 
     Just (Fun g' [] e)  -> evalE g e
-    Nothing             -> error $ "Could not find the main function"
+    Nothing             -> error $ "Could not find the main function" ++ (show g)
 evalP g (Bind f _ vs e : rest) = 
   let g' = E.add g (f, Fun E.empty vs e)
   in evalP g' rest
@@ -32,9 +32,10 @@ evalE :: VEnv -> Expr -> Value
 evalE g (Const n) = n
 evalE g (Var x)   = 
   case E.lookup g x of 
-    Just (Fun g' vs e)  -> evalE (E.union g' g) e
+    Just (Fun g' [] e)  -> evalE (E.union g' g) e
+    Just (Fun g' vs e)  -> Fun (E.union g' g) vs e
     Just n              -> n
-    Nothing -> error $ "Variable was not in the environment: " ++ (show x) ++ "\nEnv: " ++ (show g)
+    Nothing -> error $ "Variable was not in the environment. \nVar: " ++ (show x) ++ "\nEnv: " ++ (show g)
 
 evalE g (LetIn ((x, e):[]) b) = let g' = E.add g (x, evalE g e) 
                                 in evalE g' b
@@ -49,10 +50,13 @@ evalE g (IfThenElse b t f) =
 
 evalE g (Prim op) = P op []
 evalE g (App a b) = case evalE g a of 
-  P op v  -> evalOp op (v ++ [evalE g b])
-  C id v  -> C id (v ++ [evalE g b])
-  -- Missing function apply
-  _       -> error $ "Could not be evaluated"
+  P op v          -> evalOp op (v ++ [evalE g b])
+  C id v          -> C id (v ++ [evalE g b])
+  Fun g' (v:[]) e -> let g'' = E.add g' (v, evalE g b)
+                      in evalE g'' e
+  Fun g' (v:vs) e -> let g'' = E.add g' (v, evalE g b) 
+                      in Fun g'' vs e
+  _               -> error $ "Could not be evaluated"
 
 evalE g e = error $ show e
 
@@ -68,7 +72,7 @@ evalOp Div [Number (I x), Number (I y)] = Number (I $ quot x y)
 evalOp Div [Number (F x), Number (F y)] = Number (F $ x / y)
 evalOp Mod [Number (I x), Number (I y)] = Number (I $ mod x y)
 
-evalOp Not [Boolean b]      = Boolean (not b)
+evalOp Not [Boolean b]            = Boolean (not b)
 evalOp And [Boolean x, Boolean y] = Boolean (x && y) 
 evalOp Or  [Boolean x, Boolean y] = Boolean (x || y)
 
