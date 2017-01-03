@@ -1,27 +1,10 @@
 # Revision history for Compiler
 
-# Todo list: 
-- [x] Get the HandParser to return the error messages properly instead of just calling error 
-- [x] Write test cases for the Parser
-    - [x] Add test cases for arithmic expressions
-    - [x] Add test cases for boolean expressions
-    - [x] Add test cases for lists 
-    - [x] Add test cases for let expressions 
-    - [x] Add test cases for if then else expressions
-- [ ] Implement the Parser
-    - [x] Implement the arithmic language for the parser
-    - [x] Implement the boolean language for the parser
-    - [x] Implement support for lists with numbers
-        - [ ] Upgrade this to support lists of any type
-        - [ ] Find a better way to implement the different types
-    - [x] Implement let expressions
-    - [x] Implement if then else expressions
-    - [ ] Implement case expressions
-- [ ] Implement a type checker
-- [ ] Write documentation about how the language actually works
-
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
+
+#### 0.1.2.7  -- 2917-01-03
+* Evaluator now supports functions in let expressions
 
 #### 0.1.2.6  -- 2017-01-03
 * Let expressions has been rewriten to use the bind syntax as functions does

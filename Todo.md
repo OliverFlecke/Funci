@@ -1,0 +1,17 @@
+# Todo list: 
+- [x] Get the HandParser to return the error messages properly instead of just calling error 
+- [x] Write test cases for the Parser
+    - [x] Add test cases for arithmic expressions
+    - [x] Add test cases for boolean expressions
+    - [x] Add test cases for lists 
+    - [x] Add test cases for let expressions 
+    - [x] Add test cases for if then else expressions
+- [ ] Implement the Parser
+    - [x] Implement the arithmic language for the parser
+    - [x] Implement the boolean language for the parser
+    - [x] Implement support for lists with numbers
+    - [x] Implement let expressions
+    - [x] Implement if then else expressions
+    - [ ] Implement case expressions
+- [ ] Implement a type checker
+- [ ] Write documentation about how the language actually works

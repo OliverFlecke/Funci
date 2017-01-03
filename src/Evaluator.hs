@@ -37,9 +37,9 @@ evalE g (Var x)   =
     Just n              -> n
     Nothing -> error $ "Variable was not in the environment. \nVar: " ++ (show x) ++ "\nEnv: " ++ (show g)
 
-evalE g (LetIn ((Bind x _ _ e):[]) b) = let g' = E.add g (x, evalE g e) 
+evalE g (LetIn ((Bind x _ ids e):[]) b) = let g' = E.add g (x, Fun g ids e) 
                                 in evalE g' b
-evalE g (LetIn ((Bind x _ _ e):xs) b) = let g' = E.add g (x, evalE g e)
+evalE g (LetIn ((Bind x _ ids e):xs) b) = let g' = E.add g (x, Fun g ids e)
                                 in evalE g' (LetIn xs b)
 
 evalE g (IfThenElse b t f) =
