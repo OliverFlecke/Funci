@@ -16,7 +16,7 @@ parseString s = lexer s >>= parse
 parse :: [Token] -> Either String Program
 parse [] = Right []
 parse (Identifier id : rest) =
-  let (rest', vs) = helper rest []
+  let (rest', vs) = findParameters rest []
   in
     case parseExpressions rest' of
       Right (n, r)  -> do
@@ -24,8 +24,9 @@ parse (Identifier id : rest) =
         return $ Bind id Nothing vs n : p
       _ -> Left $ "Parser error: Could not parse the function definition"
   where
-    helper (Operator Assignment : rest) acc = (rest, acc)
-    helper (Identifier id : rest) acc    = helper rest (acc ++ [id])
+    findParameters (Operator Assignment : rest) acc = (rest, acc)
+    findParameters (Identifier id : rest) acc       = findParameters rest (acc ++ [id])
+    findParameters rest acc                         = (rest, acc)
 parse (Semicolon : rest) = parse rest
 parse tokens = error (show tokens)
 

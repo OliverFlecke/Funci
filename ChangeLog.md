@@ -3,7 +3,11 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
-#### 0.1.2.7  -- 2917-01-03
+#### 0.1.2.8  -- 2017-01-03
+* The overall program can now take a file as commandline argument and run it 
+* Created a test program to run and test all the programs in the test\programs folder. This test suite is called RunPrograms
+
+#### 0.1.2.7  -- 2017-01-03
 * Evaluator now supports functions in let expressions
 
 #### 0.1.2.6  -- 2017-01-03

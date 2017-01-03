@@ -8,8 +8,7 @@ type Id = String
 data Bind = Bind Id (Maybe QType) [Id] Expr
   deriving (Read, Show, Eq, Ord)
 
-data NumType = I Int 
-  | F Float 
+data NumType = I Int | F Float 
   deriving (Read, Show, Eq, Ord)
 
 -- Tokens which the input can be transformed into

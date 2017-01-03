@@ -1,16 +1,12 @@
 module Main where
 
-import Lexer 
-import Parser
-import Syntax 
+import System.Environment
+import System.Directory
 import Evaluator
 
 main :: IO ()
-main = do 
-  putStrLn "Enter program: "
-  s <- getLine 
-  let Right p = parseString s 
-  print p
-  let e = evaluate p 
-  print e 
-  -- putStrLn "End of program"
+main = do
+  file:args <- getArgs
+  putStrLn $ file
+  program <- readFile file
+  print $ evaluateString program
