@@ -23,6 +23,10 @@
 ## Goal - 0.2.0.0
 This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
 
+#### 0.1.2.6  -- 2017-01-03
+* Let expressions has been rewriten to use the bind syntax as functions does
+* Parser can now parse functions created in let expressions 
+
 #### 0.1.2.5  -- 2017-01-02 
 * Functions can now handle an appitrary number of arguments 
 

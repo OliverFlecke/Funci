@@ -38,12 +38,12 @@ data Value = Number NumType
 -- And this is what the parser should output 
 -- (eventually turned into a valid program)
 data Expr = 
-  End
+  End | Assign
   | Const Value
   | Var Id 
   | Prim Operator
   | App Expr Expr 
-  | LetIn [(Id,Expr)] Expr 
+  | LetIn [Bind] Expr 
   | IfThenElse Expr Expr Expr 
   deriving (Read, Show, Eq, Ord)
 

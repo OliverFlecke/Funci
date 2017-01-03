@@ -32,12 +32,6 @@ addAll (Env env) pairs = Env $ foldr (\(k,e) g -> M.insert k e g) env pairs
 update :: (e -> Maybe e) -> String -> Env e -> Env e 
 update f key (Env g) = Env $ M.update f key g 
 
--- update :: Env e -> (String, e) -> Env e
--- update (Env env) (key, v) = Env $ M.updateWithKey helper key env
---   where helper k _ = if k == key 
---                       then Just v 
---                       else Nothing
-
 union :: Env e -> Env e -> Env e
 union (Env g) (Env g') = Env $ M.union g g'
 
