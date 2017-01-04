@@ -113,6 +113,7 @@ expressionTests = hspec $ do
     it "Simple let" $ do
       evaluateString "main = let x = 1 in x" `shouldBe` (Number (I 1))
       evaluateString "main = let y = True in y" `shouldBe` (Boolean True)
+      evaluateString "main = let x = 1, y = 2 in y - x" `shouldBe` (Number (I 1))
     it "Let with arithmics" $ do 
       evaluateString "main = let x = 1 in x + 1" `shouldBe` (Number (I 2))
       evaluateString "main = let x = True in x || False" `shouldBe` (Boolean True)

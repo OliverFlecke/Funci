@@ -49,6 +49,10 @@ evalE g (IfThenElse b t f) =
     _             -> error $ (show b) ++ " - This should return a boolean value"
 
 evalE g (Prim op) = P op []
+evalE g (App (App (Prim Sub) x) y) = 
+  case (evalE g x, evalE g y) of 
+    (Number (I x'), Number (I y'))  -> Number $ I (x' - y')
+    (Number (F x'), Number (F y'))  -> Number $ F (x' - y')
 evalE g (App a b) = case evalE g a of 
   P op v          -> evalOp op (v ++ [evalE g b])
   C id v          -> C id (v ++ [evalE g b])
@@ -56,12 +60,13 @@ evalE g (App a b) = case evalE g a of
                       in evalE g'' e
   Fun g' (v:vs) e -> let g'' = E.add g' (v, evalE g b) 
                       in Fun g'' vs e
-  _               -> error $ "Could not be evaluated"
+  t               -> error $ "Could not be evaluated: " ++ (show t) ++ "\n" ++ (show a) ++ "\n" ++ (show b)
 
 evalE g e = error $ show e
 
 -- Evaluate operators
 evalOp :: Operator -> [Value] -> Value
+evalOp Sub [Number (I x)]               = Number (I $ -x)
 evalOp Add [Number (I x), Number (I y)] = Number (I $ x + y) 
 evalOp Add [Number (F x), Number (F y)] = Number (F $ x + y) 
 evalOp Sub [Number (I x), Number (I y)] = Number (I $ x - y)
@@ -89,7 +94,9 @@ evalOp Ge  [Number (F x), Number (F y)] = Boolean (x >= y)
 evalOp Le  [Number (I x), Number (I y)] = Boolean (x <= y)
 evalOp Le  [Number (F x), Number (F y)] = Boolean (x <= y)
 
-evalOp ListCons [Listy Empty, v] = Listy (Cons v Empty)
-evalOp ListCons [Listy l,     v] = Listy (Cons v l) 
+evalOp ListCons [Listy Empty, v]    = Listy (Cons v Empty)
+evalOp ListCons [Listy l,     v]    = Listy (Cons v l) 
+evalOp Head     [Listy (Cons v _)]  = v
+evalOp Tail     [Listy (Cons _ l)]  = Listy l
 
 evalOp op vs = P op vs

@@ -1,1 +1,1 @@
-main = True && False
+main = False && True || False 

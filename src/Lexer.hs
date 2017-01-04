@@ -1,10 +1,25 @@
-module Lexer where 
+module Lexer (lexer) where 
 
 import Data.Char
 import Syntax
 
 addToken :: Token -> String -> Either String [Token]
 addToken t s = lexer s >>= (\ts -> Right $ t : ts)
+
+findNumber :: Bool -> String -> Either String [Token]
+findNumber neg cs = 
+  let (digits, cs') = break (not . isDigitOrDot) $ cs
+  in case (neg, countDots digits) of 
+    (False, 0)  -> addToken (Num (I (read digits))) cs'
+    (True, 0)   -> addToken (Num (I (-(read digits)))) cs'
+    (False, 1)  -> addToken (Num (F (read digits))) cs'
+    (True, 1)   -> addToken (Num (F (-(read digits)))) cs'
+    _ -> Left "Could not parse: number contains too many '.'"
+  where 
+    isDigitOrDot :: Char -> Bool 
+    isDigitOrDot c = isDigit c || c == '.'
+    countDots :: [Char] -> Int
+    countDots = length . filter (\d -> d == '.')
 
 -- Function to convert a string into a list of tokens
 lexer :: String -> Either String [Token]
@@ -52,6 +67,10 @@ lexer ('&':'&':cs) = addToken (Operator And) cs
 lexer ('|':'|':cs) = addToken (Operator Or) cs
 lexer ('!':cs) = addToken (Operator Not) cs
 
+-- Find digits in the string 
+-- lexer ('-': c : cs) | isDigit c = findNumber True $ c:cs
+lexer (c : cs)      | isDigit c = findNumber False $ c:cs
+
 lexer ('+':cs) = addToken (Operator Add) cs
 lexer ('-':cs) = addToken (Operator Sub) cs
 lexer ('*':cs) = addToken (Operator Mul) cs
@@ -68,19 +87,6 @@ lexer (',':cs) = addToken (Operator Comma) cs
 -- Find boolean values
 lexer ('T':'r':'u':'e' : cs) = addToken (Booly True) cs
 lexer ('F':'a':'l':'s':'e' : cs) = addToken (Booly False) cs
-
--- Find digits in the string 
-lexer (c : cs) | isDigit c = 
-  let (digits, cs') = break (not . isDigitOrDot) $ c:cs
-  in case countDots digits of 
-    0 -> addToken (Num (I (read digits))) cs'
-    1 -> addToken (Num (F (read digits))) cs'
-    _ -> Left "Could not parse: number contains too many '.'"
-  where 
-    isDigitOrDot :: Char -> Bool 
-    isDigitOrDot c = isDigit c || c == '.'
-    countDots :: [Char] -> Int
-    countDots = length . filter (\d -> d == '.')
 
 -- Find names in the string
 lexer (c : cs) | isLetter c = 

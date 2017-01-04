@@ -23,6 +23,8 @@ main = do
 -- Testing all the arithmic operations
 testArithmics = hspec $ do 
   describe "Simple arithmic operations with integers" $ do 
+    it "Reading negative numbers" $ do 
+      parseArithmicString "-10" `shouldBe` Right (App (Prim Sub) (Const (Number (I 10))))
     it "Addition operations" $ do 
       parseArithmicString "2 + 3" `shouldBe` Right (App (App (Prim Add) (Const (Number (I 2)))) (Const (Number (I 3))))
       parseArithmicString "1 + 2 + 3" `shouldBe` Right (App (App (Prim Add) (App (App (Prim Add) (Const (Number (I 1)))) (Const (Number (I 2))))) (Const (Number (I 3))))
@@ -79,12 +81,16 @@ testArithmics = hspec $ do
     it "Interleaving multiplcation and division operations" $ do 
       parseArithmicString "1.0 * 2.0 / 3.0" `shouldBe` Right (App (App (Prim Div) (App (App (Prim Mul) (Const (Number (F 1.0)))) (Const (Number (F 2.0))))) (Const (Number (F 3.0))))
       parseArithmicString "1.0 / 2.0 * 3.0" `shouldBe` Right (App (App (Prim Mul) (App (App (Prim Div) (Const (Number (F 1.0)))) (Const (Number (F 2.0))))) (Const (Number (F 3.0))))
+    it "Interleaving add, sub, mul, and div operators" $ do 
+      parseArithmicString "1 + 1 - 1 * 1" `shouldBe` Right (App (App (Prim Sub) (App (App (Prim Add) (Const (Number (I 1)))) (Const (Number (I 1))))) (App (App (Prim Mul) (Const (Number (I 1)))) (Const (Number (I 1)))))
   describe "Arithmics with variables" $ do 
     it "Addition" $       parseArithmicString "x + y" `shouldBe` Right (App (App (Prim Add) (Var "x")) (Var "y"))
     it "Subtraction" $    parseArithmicString "x - y" `shouldBe` Right (App (App (Prim Sub) (Var "x")) (Var "y"))
     it "Multiplcation" $  parseArithmicString "x * y" `shouldBe` Right (App (App (Prim Mul) (Var "x")) (Var "y"))
     it "Division" $       parseArithmicString "x / y" `shouldBe` Right (App (App (Prim Div) (Var "x")) (Var "y"))
     it "Modulo" $       parseArithmicString "x % y" `shouldBe` Right (App (App (Prim Mod) (Var "x")) (Var "y"))
+  describe "Arithmics in main function" $ do 
+    it "Subtraction" $ parseString "main = 2 - 1" `shouldBe` Right [Bind "main" Nothing [] (App (App (Prim Sub) (Const (Number (I 2)))) (Const (Number (I 1))))]
 
 -- Testing booleans
 testBooleans = hspec $ do 

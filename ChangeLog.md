@@ -1,5 +1,9 @@
 # Revision history for Compiler
 
+#### 0.1.3.1  -- 2017-01-04
+* Unary negation can now be lexer, parsed, and evaluated. 
+    * This is done with a bit of a hack, as the subtraction operator is overloaded. Maybe this can be improved
+
 ### 0.1.3.0   -- 2017-01-04
 * Functions can now handle type assignments (Still no type checker)
     * Functions type can be defined as: add x y :: Int -> Int -> Int = x + y

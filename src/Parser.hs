@@ -113,6 +113,7 @@ parseBase (Booly b : rest)              = return (Const (Boolean b), rest)
 parseBase (Identifier x : rest) = applyArgument (Var x) rest
   where
     applyArgument :: Expr -> [Token] -> Either String (Expr, [Token])
+    applyArgument a (Operator Sub : rest) = return (a, Operator Sub : rest)
     applyArgument a t =
       case parseArithmic t of
         Right (End, rest)     -> return (a, rest)
@@ -122,7 +123,10 @@ parseBase t = Left $ "Parse error: Expecting a number or an `(` at " ++ (show t)
 
 -- Operators with precedence level 1
 parse1Expr :: [Token] -> Either String (Expr, [Token])
-parse1Expr (Operator Not : rest) = parse1Expr rest >>= (\(b, rest') -> return (App (Prim Not) b, rest'))
+parse1Expr (Operator Not : rest)      = applyUnaryOp rest Not
+parse1Expr (Operator Sub : rest)      = applyUnaryOp rest Sub
+parse1Expr (Operator Head : rest)     = applyUnaryOp rest Head 
+parse1Expr (Operator Tail : rest)     = applyUnaryOp rest Tail
 parse1Expr (Bracket LeftParen : rest) =
   case parse15Expr rest of
     Right (expr, Bracket RightParen : rest')  -> return (expr, rest')
@@ -166,6 +170,9 @@ parse15Expr t = do
 applyOperator :: Operator -> (Expr -> Expr -> Expr)
 applyOperator op = (\x -> (App (App (Prim op) x)))
 
+applyUnaryOp :: [Token] -> Operator -> Either String (Expr, [Token])
+applyUnaryOp rest op = parse1Expr rest >>= (\(e, rest') -> return (App (Prim op) e, rest'))
+
 -- Create a list of functions to apply operators
 createOpExprFuncs :: [Operator] -> [(Expr -> Expr -> Expr)]
 createOpExprFuncs [] = []
@@ -177,9 +184,9 @@ concatExprUsingOp expr op = (\(exprs, rt, ops) -> return (expr : exprs, rt, op :
 
 foldOperators :: ([Expr], [Token], [Operator]) -> Either String (Expr, [Token])
 foldOperators = (\((e : exprs), rest, ops) -> return $ (foldlWfs (createOpExprFuncs ops) e exprs, rest))
-
--- Alternative version of foldl which can fold with multible functions
-foldlWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
-foldlWfs _ z [] = z
-foldlWfs [] _ _ = error $ "This should not happen!"
-foldlWfs (f:fs) z (x:xs) = foldlWfs fs (f z x) xs
+  where 
+    -- Alternative version of foldl which can fold with multible functions
+    foldlWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
+    foldlWfs _ z [] = z
+    foldlWfs [] _ _ = error $ "This should not happen!"
+    foldlWfs (f:fs) z (x:xs) = foldlWfs fs (f z x) xs
