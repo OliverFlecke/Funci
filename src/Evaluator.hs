@@ -98,5 +98,7 @@ evalOp ListCons [Listy Empty, v]    = Listy (Cons v Empty)
 evalOp ListCons [Listy l,     v]    = Listy (Cons v l) 
 evalOp Head     [Listy (Cons v _)]  = v
 evalOp Tail     [Listy (Cons _ l)]  = Listy l
+evalOp IsEmpty  [Listy Empty]       = Boolean True
+evalOp IsEmpty  _                   = Boolean False
 
 evalOp op vs = P op vs

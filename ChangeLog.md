@@ -1,5 +1,9 @@
 # Revision history for Compiler
 
+#### 0.1.3.2  -- 2017-01-04 
+* Reworte the programTest to run the test with HUnit instead, in order to run lists of tests
+* Added lots of test cases
+
 #### 0.1.3.1  -- 2017-01-04
 * Unary negation can now be lexer, parsed, and evaluated. 
     * This is done with a bit of a hack, as the subtraction operator is overloaded. Maybe this can be improved

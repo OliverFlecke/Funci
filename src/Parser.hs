@@ -59,7 +59,7 @@ parseExpressions (Keyword Let : rest) = parseLet rest
       (bind, rest') <- parseBind x rest
       case rest' of 
         Keyword In : rest'' -> do 
-          (body, r) <- parseArithmic rest''
+          (body, r) <- parseExpressions rest''
           return $ (LetIn [bind] body, r)
         Operator Comma : rest'' -> do 
           (LetIn xs body, r) <- parseLet rest''
@@ -127,6 +127,7 @@ parse1Expr (Operator Not : rest)      = applyUnaryOp rest Not
 parse1Expr (Operator Sub : rest)      = applyUnaryOp rest Sub
 parse1Expr (Operator Head : rest)     = applyUnaryOp rest Head 
 parse1Expr (Operator Tail : rest)     = applyUnaryOp rest Tail
+parse1Expr (Operator IsEmpty : rest)  = applyUnaryOp rest IsEmpty
 parse1Expr (Bracket LeftParen : rest) =
   case parse15Expr rest of
     Right (expr, Bracket RightParen : rest')  -> return (expr, rest')

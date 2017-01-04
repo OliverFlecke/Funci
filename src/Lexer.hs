@@ -80,6 +80,7 @@ lexer ('=':cs) = addToken (Operator Assignment) cs
 
 lexer ('h':'e':'a':'d':cs) = addToken (Operator Head) cs
 lexer ('t':'a':'i':'l':cs) = addToken (Operator Tail) cs
+lexer ('i':'s':'E':'m':'p':'t':'y':cs) = addToken (Operator IsEmpty) cs
 lexer (':':cs) = addToken (Operator ListCons) cs
 
 lexer (',':cs) = addToken (Operator Comma) cs
@@ -90,9 +91,10 @@ lexer ('F':'a':'l':'s':'e' : cs) = addToken (Booly False) cs
 
 -- Find names in the string
 lexer (c : cs) | isLetter c = 
-  let (id, cs') = break (not . isLetter) $ c:cs
+  let (id, cs') = break (not . isLetterOrDigit) $ c:cs
   in addToken (toIdOrKeyword id) cs'
   where
+    isLetterOrDigit c = isLetter c || isDigit c
     toIdOrKeyword :: String -> Token
     toIdOrKeyword s 
       | s == "if"     = Keyword If 

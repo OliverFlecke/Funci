@@ -1,0 +1,13 @@
+main :: Bool
+     =
+    let f x :: Int -> Int = -1
+    in let f x :: Int -> Int = -2
+    in let f x :: Int -> Int = -3
+    in let f x :: Int -> Int = -4
+    in let f x :: Int -> Int = -5
+    in let f x :: Int -> Int = -6
+    in let f x :: Int -> Int = -7
+    in let f x :: Int -> Int = -8
+    in let f x :: Int -> Int = -9
+    in let f x :: Int -> Bool = True
+    in f 7

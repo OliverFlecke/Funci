@@ -18,6 +18,7 @@ main = do
   testComments
   testArithmics
   testTypes
+  testIdentifiers
   -- testLists
 
 -- Test that whitespace is removed 
@@ -64,6 +65,7 @@ testListOperators = hspec $ do
     it "Tail" $ lexer "tail" `shouldBe` Right [Operator Tail]
     it "ListCons" $ lexer ":" `shouldBe` Right [Operator ListCons]
     it "Comma" $ lexer "," `shouldBe` Right [Operator Comma]
+    it "isEmpty" $ lexer "isEmpty" `shouldBe` Right [Operator IsEmpty] 
 
 -- Testing Boolean operators
 testBoolean = hspec $ do
@@ -107,7 +109,7 @@ testKeywords = hspec $ do
       lexer "abc" `shouldBe` Right [Identifier "abc"]
       lexer "a = 10" `shouldBe` Right [Identifier "a", Operator Assignment, Num (I 10)]
       lexer "$" `shouldBe` Left "Unexpected character: \t$\n                      \t^"
-    it "Valid programs" $ do 
+    it "Valid expressions" $ do 
       lexer "let x = 1 in x" `shouldBe` Right [Keyword Let, Identifier "x", Operator Assignment, Num (I 1), Keyword In, Identifier "x"]
 
 -- Test that comments are removed
@@ -144,6 +146,11 @@ testTypes = hspec $ do
     it "Unit" $ lexer "()" `shouldBe` Right [BType Unit]
     it "Int -> Int" $ lexer "Int -> Int" `shouldBe` Right [BType Int, Operator TypeArrow, BType Int]
 
+testIdentifiers = hspec $ do 
+  describe "Finding identifiers -" $ do 
+    it "a" $ lexer "a" `shouldBe` Right [Identifier "a"]
+    it "abc" $ lexer "abc" `shouldBe` Right [Identifier "abc"]
+    it "a1a" $ lexer "a1a" `shouldBe` Right [Identifier "a1a"]
 -- testLists = hspec $ do 
 --   describe "Testing basic list construction:" $ do 
 --     -- it "The empty list" $ lexer "[]" `shouldBe` Right []

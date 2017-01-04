@@ -1,0 +1,5 @@
+-- test environment
+
+main :: Int =
+    let f x x x x x :: Int -> Int -> Int -> Int -> Int -> Int = (2 * x) 
+     in f 0 0 0 0 7

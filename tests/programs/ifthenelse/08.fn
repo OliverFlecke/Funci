@@ -1,0 +1,2 @@
+main :: Int = let x = []
+                in if isEmpty x then 0 else 1

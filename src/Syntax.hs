@@ -58,7 +58,7 @@ data Operator =
   Add | Sub | Mul | Div | Mod
   | Gt | Ge | Lt | Le | Eq | Ne
   | And | Or | Not  
-  | Head | Tail | ListCons
+  | Head | Tail | ListCons | IsEmpty
   | Comma 
   | Assignment | TypeAssignment | TypeArrow
   deriving (Read, Show, Eq, Ord)

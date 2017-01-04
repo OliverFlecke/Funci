@@ -140,6 +140,10 @@ testLists = hspec $ do
   -- describe "Testing list with different types:" $ do
   --   it "Int and bool" $ parseArithmicString "True : 1 : []" `shouldBe` Left "Parser error: Lists cannot have multiple types"
     -- it "Int and bool" $ parseArithmicString "True : 1 : []" `shouldBe` Right (Const (ConstList (Cons (Boolean True) (Cons (Number (Int 1)) Empty))))
+  describe "Testing list operators -" $ do 
+    it "Head" $ parseArithmicString "head (1 : [])" `shouldBe` Right (App (Prim Head) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 1)))))
+    it "Tail" $ parseArithmicString "tail (1 : [])" `shouldBe` Right (App (Prim Tail) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 1)))))
+    it "Is empty" $ parseArithmicString "isEmpty (1 : [])" `shouldBe` Right (App (Prim IsEmpty) (App (App (Prim ListCons) (Const (Listy Empty))) (Const (Number (I 1)))))
 
 testLet = hspec $ do
   describe "Testing let expressions" $ do 

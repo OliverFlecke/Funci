@@ -6,12 +6,13 @@ import Text.Regex.Posix
 import Evaluator
 import Syntax
 import Test.Hspec
+import Test.HUnit
 
 main :: IO ()
 main = findPrograms ["tests\\programs\\"]
 
 findPrograms :: [String] -> IO ()
-findPrograms [] = putStrLn "Done"
+findPrograms [] = putStrLn "Testing is done"
 findPrograms ("." : ps)  = findPrograms ps
 findPrograms (".." : ps) = findPrograms ps
 findPrograms (p:ps)      = do
@@ -21,7 +22,6 @@ findPrograms (p:ps)      = do
     let outputs = map (p ++) $ filter findOutputs dir'
     runPrograms p (files, outputs)
     let dirs = ps ++ (map (++ "\\") (map (p ++) (filter findFiles dir')))
-    -- putStrLn $ "Files: " ++ (show files) ++ "\tDirs: " ++ (show dirs)
     findPrograms dirs
   where 
     removeDots :: String -> Bool
@@ -35,20 +35,27 @@ findPrograms (p:ps)      = do
     findOutputs :: String -> Bool 
     findOutputs s = s =~ ".out"
 
-runPrograms :: String -> ([String], [String]) -> IO ()
-runPrograms path ([], [])     = putStrLn $ "Done with " ++ path
-runPrograms path (p:ps, o:os) = do
-  runProgram (p, o)
-  runPrograms path (ps, os)
-runPrograms _ _ = error "Missing test file"
+runPrograms :: String -> ([String], [String]) -> IO () 
+runPrograms path files = do 
+  tests <- generateTestCases path files
+  count <- runTestTT tests
+  putStrLn (showCounts count)
 
-runProgram :: (String, String) -> IO ()
-runProgram (file, output) = do 
-  program <- readFile file
+generateTestCases :: String -> ([String], [String]) -> IO (Test)
+generateTestCases path ([], [])     = return $ TestList []
+generateTestCases path (p:ps, o:os) = do 
+  TestList tests <- generateTestCases path (ps, os)
+  test <- generateTest (p, o)
+  return $ TestList (test : tests)
+generateTestCases path _ = error $ "Missing test file at: " ++ path
+
+generateTest :: (String, String) -> IO (Test)
+generateTest (file, output) = do 
+  program <- readFile file 
   let result = evaluateString program
-  expected <- readFile output
-  let expected' = readValue expected
-  hspec $ describe "Testing progam" $ it ("Program: " ++ program ++ "\n  Output:  " ++ (show expected')) $ result `shouldBe` expected' 
+  e <- readFile output
+  let expected = readValue e
+  return $ TestLabel ("File: " ++ file) $ TestCase $ assertEqual ("Program: " ++ program ++ "\nOutput:  " ++ (show expected)) result expected
   where 
     readValue :: String -> Value 
     readValue s = read s
