@@ -15,6 +15,7 @@ data NumType = I Int | F Float
 data Token = 
   Num NumType 
   | Booly Bool
+  | BType BaseType
   | Keyword Keywords 
   | Operator Operator 
   | Identifier Id 
@@ -59,7 +60,7 @@ data Operator =
   | And | Or | Not  
   | Head | Tail | ListCons
   | Comma 
-  | Assignment | TypeAssignment 
+  | Assignment | TypeAssignment | TypeArrow
   deriving (Read, Show, Eq, Ord)
 
 data Brackets = 
@@ -70,15 +71,15 @@ data Brackets =
 
 -- For the type checker
 data QType = Forall Id QType
-            | Ty FType 
+            | Ty Type 
             deriving (Read, Show, Eq, Ord)
 
-data FType =  Arrow FType FType
-            | Prod FType FType
-            | Sum FType FType
-            | Base BaseType
-            | TypeVar Id 
-            deriving (Read, Show, Eq, Ord)
+data Type = Arrow Type Type
+          | Prod Type Type
+          | Sum Type Type
+          | Base BaseType
+          | TypeVar Id 
+          deriving (Read, Show, Eq, Ord)
 
 data BaseType = Unit
               | Int 

@@ -18,6 +18,7 @@ main = do
   testMainFunction
   functionTests
   letFunctionTests
+  typeAssignment
 
 -- Testing all the arithmic operations
 testArithmics = hspec $ do 
@@ -187,3 +188,10 @@ letFunctionTests = hspec $ do
   describe "Creating functions with let -" $ do 
     it "Let with function" $ parseExpressionsString "let f x = x in f 1" `shouldBe` Right (LetIn [Bind "f" Nothing ["x"] (Var "x")] (App (Var "f") (Const (Number (I 1)))))
     it "Let function with two arguments" $ parseExpressionsString "let add x y = x + y in add 1 2" `shouldBe` Right (LetIn [Bind "add" Nothing ["x", "y"] (App (App (Prim Add) (Var "x")) (Var "y"))] (App (App (Var "add") (Const (Number (I 1)))) (Const (Number (I 2)))))
+
+typeAssignment = hspec $ do 
+  describe "Testing functions with type assignment -" $ do 
+    it "main with type" $ parseString "main :: Int = 1" `shouldBe` Right ([Bind "main" (Just (Ty (Base Int))) [] (Const (Number (I 1)))])
+    it "function with argument" $ parseString "main = inc 1; inc x :: Int -> Int = x + 1" `shouldBe` Right ([Bind "main" Nothing [] (App (Var "inc") (Const (Number (I 1)))), Bind "inc" (Just (Ty (Arrow (Base Int) (Base Int)))) ["x"] (App (App (Prim Add) (Var "x")) (Const (Number (I 1))))])
+    it "let with type" $ parseString "main = let x :: Int = 1 in x" `shouldBe` Right ([Bind "main" Nothing [] (LetIn [Bind "x" (Just (Ty (Base Int))) [] (Const (Number (I 1)))] (Var "x"))])
+    it "function with mulitple arguments" $ parseString "main :: Int -> Bool -> Int = True" `shouldBe` Right ([Bind "main" (Just (Ty (Arrow (Base Int) (Arrow (Base Bool) (Base Int))))) [] (Const (Boolean True))])

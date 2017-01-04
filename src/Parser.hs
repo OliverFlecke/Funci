@@ -15,20 +15,35 @@ parseString s = lexer s >>= parse
 
 parse :: [Token] -> Either String Program
 parse [] = Right []
-parse (Identifier id : rest) =
-  let (rest', vs) = findParameters rest []
+parse (Semicolon : rest)  = parse rest
+parse (Identifier id : rest) = do 
+  (bind, rest') <- parseBind id rest
+  p <- parse rest'
+  return $ bind : p
+parse tokens              = error (show tokens)
+
+-- Parse bind expressions
+parseBind :: String -> [Token] -> Either String (Bind, [Token]) 
+parseBind id rest = 
+  let (rest', vs, ty) = findParmsAndType rest []
   in
     case parseExpressions rest' of
-      Right (n, r)  -> do
-        p <- parse r
-        return $ Bind id Nothing vs n : p
-      _ -> Left $ "Parser error: Could not parse the function definition"
+      Right (n, r)  -> return $ (Bind id ty vs n, r) 
+      Left s        -> Left s
   where
-    findParameters (Operator Assignment : rest) acc = (rest, acc)
-    findParameters (Identifier id : rest) acc       = findParameters rest (acc ++ [id])
-    findParameters rest acc                         = (rest, acc)
-parse (Semicolon : rest) = parse rest
-parse tokens = error (show tokens)
+    findParmsAndType :: [Token] -> [Id] -> ([Token], [Id], Maybe QType)
+    findParmsAndType (Operator Assignment : rest) acc     = (rest, acc, Nothing)
+    findParmsAndType (Identifier id : rest) acc           = findParmsAndType rest (acc ++ [id])
+    findParmsAndType (Operator TypeAssignment : rest) acc = 
+      let (Operator Assignment : rest', ty) = parseType rest 
+      in (rest', acc, ty)
+    findParmsAndType rest acc                             = (rest, acc, Nothing)
+    parseType :: [Token] -> ([Token], Maybe QType)
+    parseType (BType ty : Operator TypeArrow : rest)  = 
+      let (rest', Just (Ty ty')) = parseType rest 
+      in (rest', Just (Ty (Arrow (Base ty) ty')))
+    parseType (BType t : rest)                        = (rest, Just (Ty (Base t)))
+    parseType tokens                                  = (tokens, Nothing)
 
 -- Parse let expression
 parseExpressionsString :: String -> Either String Expr
@@ -39,17 +54,17 @@ parseExpressions (Keyword Let : rest) = parseLet rest
   where
     findArguments (Identifier x : rest) ids        = findArguments rest (ids ++ [x])
     findArguments (Operator Assignment : rest) ids = (ids, rest)
-    parseLet (Identifier x : rest) = do
-      let (ids, rest') = findArguments rest []
-      case parseArithmic rest' of
-        Right (e, Keyword In : rest')     -> do
-          (body, rest'') <- parseArithmic rest'
-          return $ (LetIn [Bind x Nothing ids e] body, rest'')
-        Right (e, Operator Comma : rest') -> do
-          (LetIn xs body, rest'') <- parseLet rest'
-          return $ (LetIn ((Bind x Nothing ids e):xs) body, rest'')
-        Left s                            -> Left s
-        _                                 -> error "Let error"
+    parseLet :: [Token] -> Either String (Expr, [Token])
+    parseLet (Identifier x : rest) = do 
+      (bind, rest') <- parseBind x rest
+      case rest' of 
+        Keyword In : rest'' -> do 
+          (body, r) <- parseArithmic rest''
+          return $ (LetIn [bind] body, r)
+        Operator Comma : rest'' -> do 
+          (LetIn xs body, r) <- parseLet rest''
+          return $ (LetIn (bind : xs) body, r)
+        rest''              -> error $ show rest''
 
 -- Parsing if expressions
 parseExpressions (Keyword If : rest) =

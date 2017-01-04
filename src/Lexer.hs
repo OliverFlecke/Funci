@@ -12,16 +12,23 @@ lexer "" = Right []
 
 -- Handling whitespace
 lexer (' ':cs) = lexer cs
-lexer ('\n':cs) = lexer cs
 lexer ('\t':cs) = lexer cs
+lexer ('\n':cs) = lexer cs
+-- lexer ('\n':cs) = addToken Semicolon cs
 
 -- Remove comments
 lexer ('-':'-':cs) = 
-  let (_, cs') = break (\c -> c == '\n') cs -- Rewrite this inline function please...
+  let (_, '\n' : cs') = break (\c -> c == '\n') cs -- Rewrite this inline function please...
   in lexer cs'
 
 -- Not sure if I want to have semicolons in the language
 lexer (';':cs) = addToken Semicolon cs
+
+-- Types
+lexer ('(':')':cs)              = addToken (BType Unit) cs
+lexer ('I':'n':'t':cs)          = addToken (BType Int) cs
+lexer ('F':'l':'o':'a':'t':cs)  = addToken (BType Float) cs
+lexer ('B':'o':'o':'l':cs)      = addToken (BType Bool) cs
 
 -- Handling brackets
 lexer ('(':cs) = addToken (Bracket LeftParen) cs
@@ -32,6 +39,8 @@ lexer ('{':cs) = addToken (Bracket LeftBracket) cs
 lexer ('}':cs) = addToken (Bracket RightBracket) cs 
 
 -- Handing operators
+lexer (':':':':cs) = addToken (Operator TypeAssignment) cs
+lexer ('-':'>':cs) = addToken (Operator TypeArrow) cs
 lexer ('=':'=':cs) = addToken (Operator Eq) cs
 lexer ('!':'=':cs) = addToken (Operator Ne) cs
 lexer ('<':'=':cs) = addToken (Operator Le) cs
@@ -49,7 +58,6 @@ lexer ('*':cs) = addToken (Operator Mul) cs
 lexer ('/':cs) = addToken (Operator Div) cs
 lexer ('%':cs) = addToken (Operator Mod) cs
 lexer ('=':cs) = addToken (Operator Assignment) cs
-lexer (':':':':cs) = addToken (Operator TypeAssignment) cs
 
 lexer ('h':'e':'a':'d':cs) = addToken (Operator Head) cs
 lexer ('t':'a':'i':'l':cs) = addToken (Operator Tail) cs

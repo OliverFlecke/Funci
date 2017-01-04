@@ -1,7 +1,8 @@
 # Revision history for Compiler
 
-## Goal - 0.2.0.0
-This version of the lexer and parser should be done entirely with the builtin libraries for parsing in Haskell. 
+### 0.1.3.0   -- 2017-01-04
+* Functions can now handle type assignments (Still no type checker)
+    * Functions type can be defined as: add x y :: Int -> Int -> Int = x + y
 
 #### 0.1.2.8  -- 2017-01-03
 * The overall program can now take a file as commandline argument and run it 

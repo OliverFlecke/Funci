@@ -17,6 +17,7 @@ main = do
   testKeywords
   testComments
   testArithmics
+  testTypes
   -- testLists
 
 -- Test that whitespace is removed 
@@ -30,7 +31,7 @@ testWhiteSpace = hspec $ do
 -- Test that brackets are lexer corretly 
 testBrackets = hspec $ do 
   describe "Testing Brackets and paren" $ do 
-    it "Parent" $ lexer "()" `shouldBe` Right [Bracket LeftParen, Bracket RightParen]
+    it "Parent" $ lexer "( )" `shouldBe` Right [Bracket LeftParen, Bracket RightParen]
     it "Brackets" $ lexer "{}" `shouldBe` Right [Bracket LeftBracket, Bracket RightBracket]
     it "Square brackets" $ lexer "[]" `shouldBe` Right [Bracket LeftSquareBracket, Bracket RightSquareBracket]
 
@@ -44,6 +45,7 @@ testArithmicOperators = hspec $ do
     it "Reminder" $ lexer "%" `shouldBe` Right [Operator Mod]
     it "Assignment" $ lexer "=" `shouldBe` Right [Operator Assignment]
     it "Type Assignment" $ lexer "::" `shouldBe` Right [Operator TypeAssignment]
+    it "Type arrow" $ lexer "->" `shouldBe` Right [Operator TypeArrow]
 
 -- Test comparation operators
 testCompareOperators = hspec $ do 
@@ -133,6 +135,14 @@ testArithmics = hspec $ do
       lexer "1 + 2.3" `shouldBe` Right [Num (I 1), Operator Add, Num (F 2.3)]
       lexer "1.2 + 3.4" `shouldBe` Right [Num (F 1.2), Operator Add, Num (F 3.4)]
       lexer "1.2 * 3.4" `shouldBe` Right [Num (F 1.2), Operator Mul, Num (F 3.4)]
+
+testTypes = hspec $ do 
+  describe "Testing types" $ do 
+    it "Int" $ lexer "Int" `shouldBe` Right [BType Int]
+    it "Float" $ lexer "Float" `shouldBe` Right [BType Float]
+    it "Bool" $ lexer "Bool" `shouldBe` Right [BType Bool]
+    it "Unit" $ lexer "()" `shouldBe` Right [BType Unit]
+    it "Int -> Int" $ lexer "Int -> Int" `shouldBe` Right [BType Int, Operator TypeArrow, BType Int]
 
 -- testLists = hspec $ do 
 --   describe "Testing basic list construction:" $ do 
