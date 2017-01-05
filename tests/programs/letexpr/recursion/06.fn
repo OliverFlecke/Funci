@@ -1,0 +1,2 @@
+main :: Int
+     = (let f x :: (Int -> Int) = if x < 10 then f (x + 1) else x) 7

@@ -1,0 +1,4 @@
+main :: Int = 
+    let g x :: (Int -> Int) = x * x
+    in let f :: (Int -> Int) = g
+        in g 7

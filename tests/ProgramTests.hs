@@ -29,33 +29,47 @@ findPrograms (p:ps)      = do
     removeDots ".." = False
     removeDots _    = True 
     findFiles :: String -> Bool
-    findFiles s = not $ findFn s || findOutputs s
+    findFiles s = not $ findFn s || findOutputs s || s =~ "skip"
     findFn :: String -> Bool
     findFn s = s =~ ".fn"
     findOutputs :: String -> Bool 
     findOutputs s = s =~ ".out"
 
 runPrograms :: String -> ([String], [String]) -> IO () 
-runPrograms path files = do 
-  tests <- generateTestCases path files
-  count <- runTestTT tests
-  putStrLn (showCounts count)
+-- runPrograms path files = do 
+--   tests <- generateTestCases path files
+--   count <- runTestTT tests
+--   putStrLn (showCounts count)
+runPrograms _ ([], [])          = putStr ""
+runPrograms path (ps, os) = 
+  if shouldRun ps 
+    then putStrLn $ "Skipping " ++ path
+    else generateTestCases path (reverse ps, reverse os)
+  where 
+    shouldRun :: [String] -> Bool 
+    shouldRun []     = True 
+    shouldRun (p:ps) = (not (p =~ "skip")) && shouldRun ps 
 
-generateTestCases :: String -> ([String], [String]) -> IO (Test)
-generateTestCases path ([], [])     = return $ TestList []
+generateTestCases :: String -> ([String], [String]) -> IO ()
+-- generateTestCases path ([], [])     = return $ TestList []
+-- generateTestCases path (p:ps, o:os) = do 
+--   TestList tests <- generateTestCases path (ps, os)
+--   test <- generateTest (p, o)
+--   return $ TestList (test : tests)
+generateTestCases path ([], [])     = putStrLn $ "Done with: " ++ path
 generateTestCases path (p:ps, o:os) = do 
-  TestList tests <- generateTestCases path (ps, os)
-  test <- generateTest (p, o)
-  return $ TestList (test : tests)
+  generateTest (p, o)
+  generateTestCases path (ps, os)
 generateTestCases path _ = error $ "Missing test file at: " ++ path
 
-generateTest :: (String, String) -> IO (Test)
+generateTest :: (String, String) -> IO ()
 generateTest (file, output) = do 
   program <- readFile file 
   let result = evaluateString program
   e <- readFile output
   let expected = readValue e
-  return $ TestLabel ("File: " ++ file) $ TestCase $ assertEqual ("Program: " ++ program ++ "\nOutput:  " ++ (show expected)) result expected
+  -- return $ TestLabel ("File: " ++ file) $ TestCase $ assertEqual ("Program: " ++ program ++ "\nOutput:  " ++ (show expected)) result expected
+  hspec $ describe ("Testing : " ++ file) $ it ("Program: " ++ program) $ result `shouldBe` expected
   where 
     readValue :: String -> Value 
     readValue s = read s

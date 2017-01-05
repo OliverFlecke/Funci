@@ -1,0 +1,6 @@
+main :: Int
+     = 
+    let f x :: (Int -> Int) = if x < 100 
+                                    then f (x + 1) 
+                                    else x
+    in f 0 

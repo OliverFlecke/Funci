@@ -1,0 +1,5 @@
+main :: Int = 
+  let sum x :: [Int] -> Int = if isEmpty x 
+                                then 0 
+                                else head x + sum (tail x)
+  in sum (3 : 2 : 1 : [])

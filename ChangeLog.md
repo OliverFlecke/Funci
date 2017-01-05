@@ -1,5 +1,10 @@
 # Revision history for Compiler
 
+#### 0.1.3.3  -- 2017-01-05 
+* Parser can now handle more advanced types that are specified with parenticies 
+* Added test cases for recursion, which are not all running yet. 
+* The RunPrograms test suite has been reverted to the old way with hspec, as this has a better output to the console for fixing errors, and will actually make the test suite fail if there is an error.
+
 #### 0.1.3.2  -- 2017-01-04 
 * Reworte the programTest to run the test with HUnit instead, in order to run lists of tests
 * Added lots of test cases

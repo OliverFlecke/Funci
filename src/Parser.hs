@@ -35,13 +35,21 @@ parseBind id rest =
     findParmsAndType (Operator Assignment : rest) acc     = (rest, acc, Nothing)
     findParmsAndType (Identifier id : rest) acc           = findParmsAndType rest (acc ++ [id])
     findParmsAndType (Operator TypeAssignment : rest) acc = 
-      let (Operator Assignment : rest', ty) = parseType rest 
-      in (rest', acc, ty)
+      case parseType rest of 
+        (Operator Assignment : rest', ty) -> (rest', acc, ty)
+        (rest', ty)                       -> error $ "Rest: " ++ (show rest') ++ "\nType: " ++ (show ty)
     findParmsAndType rest acc                             = (rest, acc, Nothing)
     parseType :: [Token] -> ([Token], Maybe QType)
-    parseType (BType ty : Operator TypeArrow : rest)  = 
-      let (rest', Just (Ty ty')) = parseType rest 
-      in (rest', Just (Ty (Arrow (Base ty) ty')))
+    parseType (BType ty : Operator TypeArrow : tokens)  = 
+      let (outTokens, Just (Ty ty')) = parseType tokens 
+      in (outTokens, Just (Ty (Arrow (Base ty) ty')))
+    parseType (Bracket LeftParen : tokens) = 
+      case parseType tokens of 
+        (Bracket RightParen : Operator TypeArrow : rest, Just (Ty ty)) ->
+          let (outTokens, Just (Ty ty')) = parseType rest 
+          in (outTokens, Just (Ty (Arrow ty ty')))
+        (Bracket RightParen : rest', ty)                      -> (rest', ty)
+        _                                                     -> error $ "Invalid type signature"
     parseType (BType t : rest)                        = (rest, Just (Ty (Base t)))
     parseType tokens                                  = (tokens, Nothing)
 
@@ -64,7 +72,7 @@ parseExpressions (Keyword Let : rest) = parseLet rest
         Operator Comma : rest'' -> do 
           (LetIn xs body, r) <- parseLet rest''
           return $ (LetIn (bind : xs) body, r)
-        rest''              -> error $ show rest''
+        rest''              -> error $ "\nBefore: " ++ (show rest) ++ "\n\nAfter:  " ++ (show rest'') ++ "\nBind: " ++ (show bind)
 
 -- Parsing if expressions
 parseExpressions (Keyword If : rest) =
@@ -129,7 +137,7 @@ parse1Expr (Operator Head : rest)     = applyUnaryOp rest Head
 parse1Expr (Operator Tail : rest)     = applyUnaryOp rest Tail
 parse1Expr (Operator IsEmpty : rest)  = applyUnaryOp rest IsEmpty
 parse1Expr (Bracket LeftParen : rest) =
-  case parse15Expr rest of
+  case parseExpressions rest of
     Right (expr, Bracket RightParen : rest')  -> return (expr, rest')
     Right (expr, rest')                       -> Left $ "Parser error: Expected `)` at " ++ (show rest)
     Left s                                    -> Left s

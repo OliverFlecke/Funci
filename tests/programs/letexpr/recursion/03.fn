@@ -1,0 +1,15 @@
+--
+-- until p f  yields the result of applying f until p holds.
+--
+-- (slow in the interpreter)
+--
+
+main :: Int = until (longtime) (inc) 0;
+
+inc x :: (Int -> Int) = x + 1;
+longtime i :: (Int -> Bool) = 100 < i;
+
+until p f x :: ((Int -> Bool) -> (Int -> Int) -> Int -> Int) =
+                if (p x) 
+                    then x 
+                    else until p f (f x) 
