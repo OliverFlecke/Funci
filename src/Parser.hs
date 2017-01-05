@@ -16,37 +16,37 @@ parseString s = lexer s >>= parse
 parse :: [Token] -> Either String Program
 parse [] = Right []
 parse (Semicolon : rest)  = parse rest
-parse (Identifier id : rest) = do 
+parse (Identifier id : rest) = do
   (bind, rest') <- parseBind id rest
   p <- parse rest'
   return $ bind : p
 parse tokens              = error (show tokens)
 
 -- Parse bind expressions
-parseBind :: String -> [Token] -> Either String (Bind, [Token]) 
-parseBind id rest = 
+parseBind :: String -> [Token] -> Either String (Bind, [Token])
+parseBind id rest =
   let (rest', vs, ty) = findParmsAndType rest []
   in
     case parseExpressions rest' of
-      Right (n, r)  -> return $ (Bind id ty vs n, r) 
+      Right (n, r)  -> return $ (Bind id ty vs n, r)
       Left s        -> Left s
   where
     findParmsAndType :: [Token] -> [Id] -> ([Token], [Id], Maybe QType)
     findParmsAndType (Operator Assignment : rest) acc     = (rest, acc, Nothing)
     findParmsAndType (Identifier id : rest) acc           = findParmsAndType rest (acc ++ [id])
-    findParmsAndType (Operator TypeAssignment : rest) acc = 
-      case parseType rest of 
+    findParmsAndType (Operator TypeAssignment : rest) acc =
+      case parseType rest of
         (Operator Assignment : rest', ty) -> (rest', acc, ty)
         (rest', ty)                       -> error $ "Rest: " ++ (show rest') ++ "\nType: " ++ (show ty)
     findParmsAndType rest acc                             = (rest, acc, Nothing)
     parseType :: [Token] -> ([Token], Maybe QType)
-    parseType (BType ty : Operator TypeArrow : tokens)  = 
-      let (outTokens, Just (Ty ty')) = parseType tokens 
+    parseType (BType ty : Operator TypeArrow : tokens)  =
+      let (outTokens, Just (Ty ty')) = parseType tokens
       in (outTokens, Just (Ty (Arrow (Base ty) ty')))
-    parseType (Bracket LeftParen : tokens) = 
-      case parseType tokens of 
+    parseType (Bracket LeftParen : tokens) =
+      case parseType tokens of
         (Bracket RightParen : Operator TypeArrow : rest, Just (Ty ty)) ->
-          let (outTokens, Just (Ty ty')) = parseType rest 
+          let (outTokens, Just (Ty ty')) = parseType rest
           in (outTokens, Just (Ty (Arrow ty ty')))
         (Bracket RightParen : rest', ty)                      -> (rest', ty)
         _                                                     -> error $ "Invalid type signature"
@@ -63,13 +63,13 @@ parseExpressions (Keyword Let : rest) = parseLet rest
     findArguments (Identifier x : rest) ids        = findArguments rest (ids ++ [x])
     findArguments (Operator Assignment : rest) ids = (ids, rest)
     parseLet :: [Token] -> Either String (Expr, [Token])
-    parseLet (Identifier x : rest) = do 
+    parseLet (Identifier x : rest) = do
       (bind, rest') <- parseBind x rest
-      case rest' of 
-        Keyword In : rest'' -> do 
+      case rest' of
+        Keyword In : rest'' -> do
           (body, r) <- parseExpressions rest''
           return $ (LetIn [bind] body, r)
-        Operator Comma : rest'' -> do 
+        Operator Comma : rest'' -> do
           (LetIn xs body, r) <- parseLet rest''
           return $ (LetIn (bind : xs) body, r)
         rest''              -> error $ "\nBefore: " ++ (show rest) ++ "\n\nAfter:  " ++ (show rest'') ++ "\nBind: " ++ (show bind)
@@ -107,10 +107,18 @@ checkOps ops f t =
     Right (expr, rest)                -> return ([expr], rest, [])
     Left s                            -> Left s
 
+parseUnit :: [Token] -> Either String (Unit, [Token])
+parseUnit (Identifier m : tokens) = return (Unit None Meter, tokens)
+parseUnit t = error $ (show t)
+
 -- Parsing basics like numbers and boolean
 parseBase :: [Token] -> Either String (Expr, [Token])
 parseBase (Semicolon : rest)            = return (End, rest)
-parseBase (Num n : rest)                = return (Const (Number n), rest)
+-- Parsing units on numbers
+parseBase (Num n : UnitApply : rest)    = do
+   (unit, tokens) <- parseUnit rest
+   return $ (Const (Number n (Just unit)), tokens)
+parseBase (Num n : rest)                = return (Const (Number n Nothing), rest)
 parseBase (Booly b : rest)              = return (Const (Boolean b), rest)
 -- parseBase (Identifier x : rest) = return (Var x, rest)
 -- parseBase (Identifier x : rest) = do
@@ -133,7 +141,7 @@ parseBase t = Left $ "Parse error: Expecting a number or an `(` at " ++ (show t)
 parse1Expr :: [Token] -> Either String (Expr, [Token])
 parse1Expr (Operator Not : rest)      = applyUnaryOp rest Not
 parse1Expr (Operator Sub : rest)      = applyUnaryOp rest Sub
-parse1Expr (Operator Head : rest)     = applyUnaryOp rest Head 
+parse1Expr (Operator Head : rest)     = applyUnaryOp rest Head
 parse1Expr (Operator Tail : rest)     = applyUnaryOp rest Tail
 parse1Expr (Operator IsEmpty : rest)  = applyUnaryOp rest IsEmpty
 parse1Expr (Bracket LeftParen : rest) =
@@ -193,7 +201,7 @@ concatExprUsingOp expr op = (\(exprs, rt, ops) -> return (expr : exprs, rt, op :
 
 foldOperators :: ([Expr], [Token], [Operator]) -> Either String (Expr, [Token])
 foldOperators = (\((e : exprs), rest, ops) -> return $ (foldlWfs (createOpExprFuncs ops) e exprs, rest))
-  where 
+  where
     -- Alternative version of foldl which can fold with multible functions
     foldlWfs :: [(Expr -> Expr -> Expr)] -> Expr -> [Expr] -> Expr
     foldlWfs _ z [] = z

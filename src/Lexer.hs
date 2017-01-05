@@ -39,8 +39,11 @@ lexer ('-':'-':cs) =
 -- Not sure if I want to have semicolons in the language
 lexer (';':cs) = addToken Semicolon cs
 
+-- For handling units on number
+lexer ('#':cs)  = addToken UnitApply cs 
+
 -- Types
-lexer ('(':')':cs)              = addToken (BType Unit) cs
+lexer ('(':')':cs)              = addToken (BType UnitType) cs
 lexer ('I':'n':'t':cs)          = addToken (BType Int) cs
 lexer ('F':'l':'o':'a':'t':cs)  = addToken (BType Float) cs
 lexer ('B':'o':'o':'l':cs)      = addToken (BType Bool) cs

@@ -51,8 +51,8 @@ evalE g (IfThenElse b t f) =
 evalE g (Prim op) = P op []
 evalE g (App (App (Prim Sub) x) y) = 
   case (evalE g x, evalE g y) of 
-    (Number (I x'), Number (I y'))  -> Number $ I (x' - y')
-    (Number (F x'), Number (F y'))  -> Number $ F (x' - y')
+    (Number (I x') _, Number (I y') _)  -> Number (I (x' - y')) Nothing
+    (Number (F x') _, Number (F y') _)  -> Number (F (x' - y')) Nothing
 evalE g (App a b) = case evalE g a of 
   P op v          -> evalOp op (v ++ [evalE g b])
   C id v          -> C id (v ++ [evalE g b])
@@ -66,33 +66,33 @@ evalE g e = error $ show e
 
 -- Evaluate operators
 evalOp :: Operator -> [Value] -> Value
-evalOp Sub [Number (I x)]               = Number (I $ -x)
-evalOp Add [Number (I x), Number (I y)] = Number (I $ x + y) 
-evalOp Add [Number (F x), Number (F y)] = Number (F $ x + y) 
-evalOp Sub [Number (I x), Number (I y)] = Number (I $ x - y)
-evalOp Sub [Number (F x), Number (F y)] = Number (F $ x - y)
-evalOp Mul [Number (I x), Number (I y)] = Number (I $ x * y)
-evalOp Mul [Number (F x), Number (F y)] = Number (F $ x * y)
-evalOp Div [Number (I x), Number (I y)] = Number (I $ quot x y)
-evalOp Div [Number (F x), Number (F y)] = Number (F $ x / y)
-evalOp Mod [Number (I x), Number (I y)] = Number (I $ mod x y)
+evalOp Sub [Number (I x) unit]                = Number (I $ -x) unit
+evalOp Add [Number (I x) u, Number (I y) u']  = Number (I $ x + y) (checkUnits u u') 
+evalOp Add [Number (F x) u, Number (F y) u']  = Number (F $ x + y) (checkUnits u u') 
+evalOp Sub [Number (I x) u, Number (I y) u']  = Number (I $ x - y) (checkUnits u u')
+evalOp Sub [Number (F x) u, Number (F y) u']  = Number (F $ x - y) (checkUnits u u')
+evalOp Mul [Number (I x) u, Number (I y) u']  = Number (I $ x * y) (checkUnits u u')
+evalOp Mul [Number (F x) u, Number (F y) u']  = Number (F $ x * y) (checkUnits u u')
+evalOp Div [Number (I x) u, Number (I y) u']  = Number (I $ quot x y) (checkUnits u u')
+evalOp Div [Number (F x) u, Number (F y) u']  = Number (F $ x / y) (checkUnits u u')
+evalOp Mod [Number (I x) u, Number (I y) u']  = Number (I $ mod x y) (checkUnits u u')
 
 evalOp Not [Boolean b]            = Boolean (not b)
 evalOp And [Boolean x, Boolean y] = Boolean (x && y) 
 evalOp Or  [Boolean x, Boolean y] = Boolean (x || y)
 
-evalOp Eq  [Number (I x), Number (I y)] = Boolean (x == y)
-evalOp Eq  [Number (F x), Number (F y)] = Boolean (x == y)
-evalOp Ne  [Number (I x), Number (I y)] = Boolean (not $ x == y)
-evalOp Ne  [Number (F x), Number (F y)] = Boolean (not $ x == y)
-evalOp Gt  [Number (I x), Number (I y)] = Boolean (x > y)
-evalOp Gt  [Number (F x), Number (F y)] = Boolean (x > y)
-evalOp Lt  [Number (I x), Number (I y)] = Boolean (x < y)
-evalOp Lt  [Number (F x), Number (F y)] = Boolean (x < y)
-evalOp Ge  [Number (I x), Number (I y)] = Boolean (x >= y)
-evalOp Ge  [Number (F x), Number (F y)] = Boolean (x >= y)
-evalOp Le  [Number (I x), Number (I y)] = Boolean (x <= y)
-evalOp Le  [Number (F x), Number (F y)] = Boolean (x <= y)
+evalOp Eq  [Number (I x) u, Number (I y) u']  = Boolean (x == y)
+evalOp Eq  [Number (F x) u, Number (F y) u']  = Boolean (x == y)
+evalOp Ne  [Number (I x) u, Number (I y) u']  = Boolean (not $ x == y)
+evalOp Ne  [Number (F x) u, Number (F y) u']  = Boolean (not $ x == y)
+evalOp Gt  [Number (I x) u, Number (I y) u']  = Boolean (x > y)
+evalOp Gt  [Number (F x) u, Number (F y) u']  = Boolean (x > y)
+evalOp Lt  [Number (I x) u, Number (I y) u']  = Boolean (x < y)
+evalOp Lt  [Number (F x) u, Number (F y) u']  = Boolean (x < y)
+evalOp Ge  [Number (I x) u, Number (I y) u']  = Boolean (x >= y)
+evalOp Ge  [Number (F x) u, Number (F y) u']  = Boolean (x >= y)
+evalOp Le  [Number (I x) u, Number (I y) u']  = Boolean (x <= y)
+evalOp Le  [Number (F x) u, Number (F y) u']  = Boolean (x <= y)
 
 evalOp ListCons [Listy Empty, v]    = Listy (Cons v Empty)
 evalOp ListCons [Listy l,     v]    = Listy (Cons v l) 
@@ -102,3 +102,6 @@ evalOp IsEmpty  [Listy Empty]       = Boolean True
 evalOp IsEmpty  _                   = Boolean False
 
 evalOp op vs = P op vs
+
+checkUnits :: Maybe Unit -> Maybe Unit -> Maybe Unit 
+checkUnits x y = if x == y then x else error $ "Conflicting units: " ++ (show x) ++ " =/= " ++ (show y)

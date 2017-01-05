@@ -19,6 +19,7 @@ main = do
   testArithmics
   testTypes
   testIdentifiers
+  numbersWithUnits
   -- testLists
 
 -- Test that whitespace is removed 
@@ -143,7 +144,7 @@ testTypes = hspec $ do
     it "Int" $ lexer "Int" `shouldBe` Right [BType Int]
     it "Float" $ lexer "Float" `shouldBe` Right [BType Float]
     it "Bool" $ lexer "Bool" `shouldBe` Right [BType Bool]
-    it "Unit" $ lexer "()" `shouldBe` Right [BType Unit]
+    it "Unit" $ lexer "()" `shouldBe` Right [BType UnitType]
     it "Int -> Int" $ lexer "Int -> Int" `shouldBe` Right [BType Int, Operator TypeArrow, BType Int]
 
 testIdentifiers = hspec $ do 
@@ -155,3 +156,9 @@ testIdentifiers = hspec $ do
 --   describe "Testing basic list construction:" $ do 
 --     -- it "The empty list" $ lexer "[]" `shouldBe` Right []
 --     it
+
+
+-- Testing the lexing of numbers with units
+numbersWithUnits = hspec $ do 
+  describe "Testing lexing of numbers with units" $ do 
+    it "1 #" $ lexer "1 # m" `shouldBe` Right [Num (I 1), UnitApply, Identifier "m"]
