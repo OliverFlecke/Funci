@@ -9,6 +9,9 @@ module Parser (
 
 import Syntax
 import Lexer
+import Data.Text (strip, pack, unpack)
+import Data.List.Split
+import Text.Regex.Posix
 
 parseString :: String -> Either String Program
 parseString s = lexer s >>= parse
@@ -97,35 +100,13 @@ parseArithmicString s = lexer s >>= (\t -> fst `fmap` parseArithmic t)
 parseArithmic :: [Token] -> Either String (Expr, [Token])
 parseArithmic tokens = parse15Expr tokens
 
-checkOps :: [Operator] -> ([Token] -> Either String (Expr, [Token])) -> [Token] -> Either String ([Expr], [Token], [Operator])
-checkOps ops f t =
-  case f t of
-    Right (expr, Operator op : rest)  ->
-        if elem op ops
-          then checkOps ops f rest >>= concatExprUsingOp expr op
-          else return ([expr], Operator op : rest, [])
-    Right (expr, rest)                -> return ([expr], rest, [])
-    Left s                            -> Left s
-
-parseUnit :: [Token] -> Either String (Unit, [Token])
-parseUnit (Identifier m : tokens) = return (Unit None Meter, tokens)
-parseUnit t = error $ (show t)
-
 -- Parsing basics like numbers and boolean
 parseBase :: [Token] -> Either String (Expr, [Token])
 parseBase (Semicolon : rest)            = return (End, rest)
 -- Parsing units on numbers
-parseBase (Num n : UnitApply : rest)    = do
-   (unit, tokens) <- parseUnit rest
-   return $ (Const (Number n (Just unit)), tokens)
-parseBase (Num n : rest)                = return (Const (Number n Nothing), rest)
+parseBase (Num n : Units s : rest)      = return (Const (Number n (parseUnit s)), rest)
+parseBase (Num n : rest)                = return (Const (Number n (Unit [])), rest)
 parseBase (Booly b : rest)              = return (Const (Boolean b), rest)
--- parseBase (Identifier x : rest) = return (Var x, rest)
--- parseBase (Identifier x : rest) = do
---   case parseArithmic rest of
---     Right (e, Semicolon : rest')  -> return (App (Var x) e, rest')
---     _                             -> return (Var x, rest)
---     -- Left s                        -> return (Var x, rest)
 parseBase (Identifier x : rest) = applyArgument (Var x) rest
   where
     applyArgument :: Expr -> [Token] -> Either String (Expr, [Token])
@@ -184,6 +165,16 @@ parse15Expr t = do
   foldOperators (reverse exprs, r, ops)
 
 -- Helper functions
+checkOps :: [Operator] -> ([Token] -> Either String (Expr, [Token])) -> [Token] -> Either String ([Expr], [Token], [Operator])
+checkOps ops f t =
+  case f t of
+    Right (expr, Operator op : rest)  ->
+        if elem op ops
+          then checkOps ops f rest >>= concatExprUsingOp expr op
+          else return ([expr], Operator op : rest, [])
+    Right (expr, rest)                -> return ([expr], rest, [])
+    Left s                            -> Left s
+
 applyOperator :: Operator -> (Expr -> Expr -> Expr)
 applyOperator op = (\x -> (App (App (Prim op) x)))
 
@@ -207,3 +198,55 @@ foldOperators = (\((e : exprs), rest, ops) -> return $ (foldlWfs (createOpExprFu
     foldlWfs _ z [] = z
     foldlWfs [] _ _ = error $ "This should not happen!"
     foldlWfs (f:fs) z (x:xs) = foldlWfs fs (f z x) xs
+
+-- Parsing units
+parseUnit :: String -> Unit
+parseUnit s =
+  let units = splitOn "*" s
+  in go units
+  -- in error $ show units
+  where
+    go :: [String] -> Unit 
+    go []     = Unit []
+    go (x:xs) =
+      let (pu:rest) = splitOn "^" (unpack (strip (pack x)))
+          Unit us = go xs
+      in Unit ((findPrefix pu, findUnit pu, findExpo rest) : us)
+    findUnit :: String -> BaseUnit
+    findUnit s
+      | s =~ "m$"   = Metre
+      | s =~ "s$"   = Second
+      | s =~ "g$"   = Gram
+      | s =~ "A$"   = Ampere
+      | s =~ "K$"   = Kelvin
+      | s =~ "mol$" = Mole
+      | s =~ "cd$"  = Candela
+      | otherwise   = CustomUnit s
+    findPrefix :: String -> UnitPrefix
+    findPrefix "cd"   = None
+    findPrefix "mol"  = None
+    findPrefix s
+      | s =~ "^Y[a-zA-Z]+"   = Yotta
+      | s =~ "^Z[a-zA-Z]+"   = Zetta
+      | s =~ "^E[a-zA-Z]+"   = Exa
+      | s =~ "^P[a-zA-Z]+"   = Peta
+      | s =~ "^T[a-zA-Z]+"   = Tera
+      | s =~ "^G[a-zA-Z]+"   = Giga
+      | s =~ "^M[a-zA-Z]+"   = Mega
+      | s =~ "^k[a-zA-Z]+"   = Kilo
+      | s =~ "^h[a-zA-Z]+"   = Hecto
+      | s =~ "^da[a-zA-Z]+"  = Deca
+      | s =~ "^d[a-zA-Z]+"   = Deci
+      | s =~ "^c[a-zA-Z]+"   = Centi
+      | s =~ "^mu[a-zA-Z]+"  = Micro -- This and the next line are switched, as the next will make this redundant and wrong
+      | s =~ "^m[a-zA-Z]+"   = Milli
+      | s =~ "^n[a-zA-Z]+"   = Nano
+      | s =~ "^p[a-zA-Z]+"   = Pico
+      | s =~ "^f[a-zA-Z]+"   = Femto
+      | s =~ "^a[a-zA-Z]+"   = Atto
+      | s =~ "^z[a-zA-Z]+"   = Zepto
+      | s =~ "^y[a-zA-Z]+"   = Yocto
+      | otherwise   = None
+    findExpo :: [String] -> Exponent
+    findExpo []     = 1
+    findExpo (n:[]) = read n

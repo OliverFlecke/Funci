@@ -45,6 +45,7 @@ testArithmicOperators = hspec $ do
     it "Multiplcation" $ lexer "*" `shouldBe` Right [Operator Mul]
     it "Divition" $ lexer "/" `shouldBe` Right [Operator Div]
     it "Reminder" $ lexer "%" `shouldBe` Right [Operator Mod]
+    it "Power" $ lexer "^" `shouldBe` Right [Operator Pow]
     it "Assignment" $ lexer "=" `shouldBe` Right [Operator Assignment]
     it "Type Assignment" $ lexer "::" `shouldBe` Right [Operator TypeAssignment]
     it "Type arrow" $ lexer "->" `shouldBe` Right [Operator TypeArrow]
@@ -128,6 +129,7 @@ testArithmics = hspec $ do
       lexer "1 - 2" `shouldBe` Right [Num (I 1), Operator Sub, Num (I 2)]
       lexer "1 * 2" `shouldBe` Right [Num (I 1), Operator Mul, Num (I 2)]
       lexer "1 / 2" `shouldBe` Right [Num (I 1), Operator Div, Num (I 2)]
+      lexer "2 ^ 2" `shouldBe` Right [Num (I 2), Operator Pow, Num (I 2)]
     it "Test cases with interleaving operators" $ do
       lexer "1 + 2 * 3" `shouldBe` Right [Num (I 1), Operator Add, Num (I 2), Operator Mul, Num (I 3)]
       lexer "1 * 2 + 3" `shouldBe` Right [Num (I 1), Operator Mul, Num (I 2), Operator Add, Num (I 3)]
@@ -161,4 +163,5 @@ testIdentifiers = hspec $ do
 -- Testing the lexing of numbers with units
 numbersWithUnits = hspec $ do 
   describe "Testing lexing of numbers with units" $ do 
-    it "1 #" $ lexer "1 # m" `shouldBe` Right [Num (I 1), UnitApply, Identifier "m"]
+    it "1 #" $ lexer "1 <<m>>" `shouldBe` Right [Num (I 1), Units "m"]
+    it "1 # m s A #" $ lexer "1 <<m s A>>" `shouldBe` Right [Num (I 1), Units "m s A"] 

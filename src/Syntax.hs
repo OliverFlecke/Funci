@@ -2,33 +2,34 @@ module Syntax where
 
 import qualified Environment as E
 
-type Program = [Bind] 
-type Id = String 
+type Program = [Bind]
+type Id = String
 
 data Bind = Bind Id (Maybe QType) [Id] Expr
   deriving (Read, Show, Eq, Ord)
 
-data NumType = I Int | F Float 
+data NumType = I Int | F Float
   deriving (Read, Show, Eq, Ord)
-  
+
 -- Tokens which the input can be transformed into
-data Token = 
-  Num NumType 
+data Token =
+  Num NumType
   | Booly Bool
   | BType BaseType
-  | Keyword Keywords 
-  | Operator Operator 
-  | Identifier Id 
+  | Keyword Keywords
+  | Operator Operator
+  | Units String
+  | Identifier Id
   | Bracket Brackets
-  | Semicolon 
+  | Semicolon
   | UnitApply
   deriving (Read, Show, Eq, Ord)
 
 data List a = Empty | Cons a (List a) deriving (Read, Show, Eq, Ord)
 
-type VEnv = E.Env Value 
+type VEnv = E.Env Value
 -- This is the values which the program should be able to return
-data Value = Number NumType (Maybe Unit)
+data Value = Number NumType Unit
            | Boolean Bool
            | Listy (List Value)
            | Fun VEnv [Id] Expr
@@ -36,35 +37,35 @@ data Value = Number NumType (Maybe Unit)
            | C Id [Value]
            deriving (Read, Show, Eq, Ord)
 
--- And this is what the parser should output 
+-- And this is what the parser should output
 -- (eventually turned into a valid program)
-data Expr = 
-  End 
+data Expr =
+  End
   | Const Value
-  | Var Id 
+  | Var Id
   | Prim Operator
-  | App Expr Expr 
-  | LetIn [Bind] Expr 
-  | IfThenElse Expr Expr Expr 
+  | App Expr Expr
+  | LetIn [Bind] Expr
+  | IfThenElse Expr Expr Expr
   deriving (Read, Show, Eq, Ord)
 
-data Keywords = 
-  If | Then | Else 
-  | Case | Of 
-  | Let | In 
+data Keywords =
+  If | Then | Else
+  | Case | Of
+  | Let | In
   | Where
   deriving (Read, Show, Eq, Ord)
 
-data Operator = 
-  Add | Sub | Mul | Div | Mod
+data Operator =
+  Add | Sub | Mul | Div | Mod | Pow
   | Gt | Ge | Lt | Le | Eq | Ne
-  | And | Or | Not  
+  | And | Or | Not
   | Head | Tail | ListCons | IsEmpty
-  | Comma 
-  | Assignment | TypeAssignment | TypeArrow 
+  | Comma
+  | Assignment | TypeAssignment | TypeArrow
   deriving (Read, Show, Eq, Ord)
 
-data Brackets = 
+data Brackets =
   LeftParen | RightParen
   | LeftBracket | RightBracket
   | LeftSquareBracket | RightSquareBracket
@@ -72,53 +73,59 @@ data Brackets =
 
 -- For the type checker
 data QType = Forall Id QType
-            | Ty Type 
+            | Ty Type
             deriving (Read, Show, Eq, Ord)
 
 data Type = Arrow Type Type
           | Prod Type Type
           | Sum Type Type
           | Base BaseType
-          | TypeVar Id 
+          | TypeVar Id
           deriving (Read, Show, Eq, Ord)
 
 data BaseType = UnitType
-              | Int 
+              | Int
               | Float
-              | Bool 
+              | Bool
               deriving (Read, Show, Eq, Ord)
 
 -- Units for number
-data Unit = Unit UnitPrefix BaseUnit
+data Unit = Unit [(UnitPrefix, BaseUnit, Exponent)]
   deriving (Read, Show, Eq, Ord)
-  
-data BaseUnit = 
-  Meter 
-  | Second
-  | Grams
-  | Ampere
-  | Kelvin
-  | Mole
-  | Candela
+
+type Exponent = Int
+
+data BaseUnit =
+  Metre       -- m
+  | Second    -- s
+  | Gram      -- g
+  | Ampere    -- A
+  | Kelvin    -- K
+  | Mole      -- mol
+  | Candela   -- cd
+  | CustomUnit String
   deriving (Read, Show, Eq, Ord)
 
 -- Stardard metric prefixes
-data UnitPrefix = 
-  Exa       -- 10^18
-  | Peta    -- 10^15
-  | Tera    -- 10^12
-  | Giga    -- 10^9
-  | Mega    -- 10^6
-  | Kilo    -- 10^3
-  | Hecto   -- 10^2
-  | Deca    -- 10^1
-  | None
-  | Deci    -- 10^-1
-  | Centi   -- 10^-2
-  | Milli   -- 10^-3
-  | Micro   -- 10^-6
-  | Nano    -- 10^-9
-  | Pico    -- 10^-12
-  | Femto   -- 10^-15
-  | Atto    -- 10^-18
+data UnitPrefix = None
+  | Yotta   -- 10^24  Y
+  | Zetta   -- 10^21  Z
+  | Exa     -- 10^18  E
+  | Peta    -- 10^15  P
+  | Tera    -- 10^12  T
+  | Giga    -- 10^9   G
+  | Mega    -- 10^6   M
+  | Kilo    -- 10^3   k
+  | Hecto   -- 10^2   h
+  | Deca    -- 10^1   da
+  | Deci    -- 10^-1  d
+  | Centi   -- 10^-2  c
+  | Milli   -- 10^-3  m
+  | Micro   -- 10^-6  mu
+  | Nano    -- 10^-9  n
+  | Pico    -- 10^-12 p
+  | Femto   -- 10^-15 f
+  | Atto    -- 10^-18 a
+  | Zepto   -- 10^-21 z
+  | Yocto   -- 10^-24 y
   deriving (Read, Show, Eq, Ord)

@@ -4,6 +4,13 @@
 
 This version should contain a fully working compiler for compiling a functional language, capable of handling semilar syntax to haskell. Numbers in this language should also be able to 'unit-check' between units (like meters, seconds, and so on).
 
+### 0.1.4.1   -- 2017-01-06
+
+* SI base units can now be lexed and parsed with numbers.
+* An custom unit type is also supported to store any unknow unit as a basic string.
+* Standard unit prefixes is supported from yotta to yocto.
+* Units with exponents are also handled.
+
 ### 0.1.4.0   -- 2017-01-06
 
 * Added metric units to the syntax definition

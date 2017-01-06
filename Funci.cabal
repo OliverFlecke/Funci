@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                Funci
-version:             0.1.4.0
+version:             0.1.4.1
 synopsis:            Compiler to parse and compile a functional language, working title "Funci"
 description:         This projects focus on building a simple compiler for a functional language. This is not intended to be something for real use, but only for learning.   
 license:             BSD3
@@ -25,6 +25,9 @@ executable Funci
   build-depends:        base
                       , containers >= 0.5.8
                       , directory
+                      , split
+                      , regex-posix
+                      , text 
   hs-source-dirs:       src
   default-language:     Haskell2010
 
@@ -36,6 +39,11 @@ library
                       , Environment
   build-depends:        base
                       , containers >= 0.5.8
+                      , containers
+                      , directory
+                      , split
+                      , regex-posix
+                      , text
   hs-source-dirs:       src
   default-language:     Haskell2010
 
@@ -80,4 +88,14 @@ test-suite RunPrograms
                       , HUnit
                       , regex-posix 
                       , directory >= 1
+  default-language:     Haskell2010
+
+test-suite UnitParsing
+  type:                 exitcode-stdio-1.0
+  main-is:              UnitParsingTests.hs
+  hs-source-dirs:       tests
+  build-depends:        base 
+                      , Funci 
+                      , hspec
+                      , QuickCheck
   default-language:     Haskell2010

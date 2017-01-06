@@ -29,7 +29,7 @@ findPrograms (p:ps)      = do
     removeDots ".." = False
     removeDots _    = True 
     findFiles :: String -> Bool
-    findFiles s = not $ findFn s || findOutputs s || s =~ "skip"
+    findFiles s = not $ findFn s || findOutputs s 
     findFn :: String -> Bool
     findFn s = s =~ ".fn"
     findOutputs :: String -> Bool 
@@ -41,14 +41,7 @@ runPrograms :: String -> ([String], [String]) -> IO ()
 --   count <- runTestTT tests
 --   putStrLn (showCounts count)
 runPrograms _ ([], [])          = putStr ""
-runPrograms path (ps, os) = 
-  if shouldRun ps 
-    then putStrLn $ "Skipping " ++ path
-    else generateTestCases path (reverse ps, reverse os)
-  where 
-    shouldRun :: [String] -> Bool 
-    shouldRun []     = True 
-    shouldRun (p:ps) = (not (p =~ "skip")) && shouldRun ps 
+runPrograms path (ps, os) = generateTestCases path (reverse ps, reverse os)
 
 generateTestCases :: String -> ([String], [String]) -> IO ()
 -- generateTestCases path ([], [])     = return $ TestList []
