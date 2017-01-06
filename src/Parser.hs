@@ -10,6 +10,7 @@ module Parser (
 import Syntax
 import Lexer
 import Data.Text (strip, pack, unpack)
+import Data.List
 import Data.List.Split
 import Text.Regex.Posix
 
@@ -202,16 +203,16 @@ foldOperators = (\((e : exprs), rest, ops) -> return $ (foldlWfs (createOpExprFu
 -- Parsing units
 parseUnit :: String -> Unit
 parseUnit s =
-  let units = splitOn "*" s
-  in go units
-  -- in error $ show units
+  let us = splitOn "*" s
+      Unit unit = go us
+  in Unit $ sort unit
   where
     go :: [String] -> Unit 
     go []     = Unit []
     go (x:xs) =
       let (pu:rest) = splitOn "^" (unpack (strip (pack x)))
           Unit us = go xs
-      in Unit ((findPrefix pu, findUnit pu, findExpo rest) : us)
+      in Unit ((findUnit pu, findPrefix pu, findExpo rest) : us)
     findUnit :: String -> BaseUnit
     findUnit s
       | s =~ "m$"   = Metre

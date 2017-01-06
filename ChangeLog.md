@@ -4,7 +4,12 @@
 
 This version should contain a fully working compiler for compiling a functional language, capable of handling semilar syntax to haskell. Numbers in this language should also be able to 'unit-check' between units (like meters, seconds, and so on).
 
-### 0.1.4.1   -- 2017-01-06
+#### 0.1.4.2   -- 2017-01-06
+
+* Unit system can now handle some addition and multiplcation expressions, althrough it is not working with everything yet.
+* Problem with different numeric types, which is why I will try to change the basic NumType to a more general type.
+
+#### 0.1.4.1   -- 2017-01-06
 
 * SI base units can now be lexed and parsed with numbers.
 * An custom unit type is also supported to store any unknow unit as a basic string.

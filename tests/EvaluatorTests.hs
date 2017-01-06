@@ -13,11 +13,13 @@ main = do
   compareOperatorTests
   expressionTests
   functionTests
+  evaluatingNumbersWithUnits
 
 basicTests = hspec $ do 
   describe "Evaluate basics" $ do 
     it "evaluate integer" $ evaluateString "main = 0" `shouldBe` (Number (I 0) (Unit []))
     it "evaluate float" $ evaluateString "main = 0.0" `shouldBe` (Number (F 0.0) (Unit []))
+    it "Negative number" $ evaluateString "main = -10" `shouldBe` (Number (I (-10)) (Unit []))
     it "evaluate boolean" $ do 
       evaluateString "main = True" `shouldBe` (Boolean True)
       evaluateString "main = False" `shouldBe` (Boolean False)
@@ -146,3 +148,50 @@ functionTests = hspec $ do
   describe "Testing functions with multiple parameters -" $ do 
     it "Calling functions with multiple numbers" $ do 
       evaluateString "main = add 1 2; add x y = x + y" `shouldBe` (Number (I 3) (Unit []))
+
+evaluatingNumbersWithUnits = hspec $ do 
+  describe "Numbers with base units -" $ do 
+    it "Metre" $ evaluateString "main = 1 <<m>>" `shouldBe` (Number (I 1) (Unit [(Metre, None, 1)]))
+    it "Second" $ evaluateString "main = 1 <<s>>" `shouldBe` (Number (I 1) (Unit [(Second, None, 1)]))
+    it "Gram" $ evaluateString "main = 1 <<g>>" `shouldBe` (Number (I 1) (Unit [(Gram, None, 1)]))
+    it "Ampere" $ evaluateString "main = 1 <<A>>" `shouldBe` (Number (I 1) (Unit [(Ampere, None, 1)]))
+    it "Kelvin" $ evaluateString "main = 1 <<K>>" `shouldBe` (Number (I 1) (Unit [(Kelvin, None, 1)]))
+    it "Mole" $ evaluateString "main = 1 <<mol>>" `shouldBe` (Number (I 1) (Unit [(Mole, None, 1)]))
+    it "Candela" $ evaluateString "main = 1 <<cd>>" `shouldBe` (Number (I 1) (Unit [(Candela, None, 1)]))
+  describe "Arithmic operations with units -" $ do 
+    it "Addition" $ do 
+      evaluateString "main = 1 <<m>> + 1 <<m>>" `shouldBe` (Number (I 2) (Unit [(Metre, None, 1)]))
+      evaluateString "main = 1 <<s>> + 1 <<s>>" `shouldBe` (Number (I 2) (Unit [(Second, None, 1)]))
+      evaluateString "main = 1 <<g>> + 1 <<g>>" `shouldBe` (Number (I 2) (Unit [(Gram, None, 1)]))
+      evaluateString "main = 1 <<A>> + 1 <<A>>" `shouldBe` (Number (I 2) (Unit [(Ampere, None, 1)]))
+      evaluateString "main = 1 <<K>> + 1 <<K>>" `shouldBe` (Number (I 2) (Unit [(Kelvin, None, 1)]))
+      evaluateString "main = 1 <<mol>> + 1 <<mol>>" `shouldBe` (Number (I 2) (Unit [(Mole, None, 1)]))
+      evaluateString "main = 1 <<cd>> + 1 <<cd>>" `shouldBe` (Number (I 2) (Unit [(Candela, None, 1)]))
+    it "Subtration" $ do 
+      evaluateString "main = 1 <<m>> - 1 <<m>>" `shouldBe` (Number (I 0) (Unit [(Metre, None, 1)]))
+      evaluateString "main = 1 <<s>> - 1 <<s>>" `shouldBe` (Number (I 0) (Unit [(Second, None, 1)]))
+      evaluateString "main = 1 <<g>> - 1 <<g>>" `shouldBe` (Number (I 0) (Unit [(Gram, None, 1)]))
+      evaluateString "main = 1 <<A>> - 1 <<A>>" `shouldBe` (Number (I 0) (Unit [(Ampere, None, 1)]))
+      evaluateString "main = 1 <<K>> - 1 <<K>>" `shouldBe` (Number (I 0) (Unit [(Kelvin, None, 1)]))
+      evaluateString "main = 1 <<mol>> - 1 <<mol>>" `shouldBe` (Number (I 0) (Unit [(Mole, None, 1)]))
+      evaluateString "main = 1 <<cd>> - 1 <<cd>>" `shouldBe` (Number (I 0) (Unit [(Candela, None, 1)]))
+    it "Multiplication" $ do 
+      evaluateString "main = 4 <<m>> * 4 <<m>>" `shouldBe` (Number (I 16) (Unit [(Metre, None, 2)]))
+      evaluateString "main = 4 <<s>> * 4 <<s>>" `shouldBe` (Number (I 16) (Unit [(Second, None, 2)]))
+      evaluateString "main = 4 <<g>> * 4 <<g>>" `shouldBe` (Number (I 16) (Unit [(Gram, None, 2)]))
+      evaluateString "main = 4 <<A>> * 4 <<A>>" `shouldBe` (Number (I 16) (Unit [(Ampere, None, 2)]))
+      evaluateString "main = 4 <<K>> * 4 <<K>>" `shouldBe` (Number (I 16) (Unit [(Kelvin, None, 2)]))
+      evaluateString "main = 4 <<mol>> * 4 <<mol>>" `shouldBe` (Number (I 16) (Unit [(Mole, None, 2)]))
+      evaluateString "main = 4 <<cd>> * 4 <<cd>>" `shouldBe` (Number (I 16) (Unit [(Candela, None, 2)]))
+    it "Division" $ do 
+      evaluateString "main = 4 <<m>> / 2 <<m>>" `shouldBe` (Number (I 2) (Unit []))
+      evaluateString "main = 4 <<s>> / 2 <<s>>" `shouldBe` (Number (I 2) (Unit []))
+      evaluateString "main = 4 <<g>> / 2 <<g>>" `shouldBe` (Number (I 2) (Unit []))
+      evaluateString "main = 4 <<A>> / 2 <<A>>" `shouldBe` (Number (I 2) (Unit []))
+      evaluateString "main = 4 <<K>> / 2 <<K>>" `shouldBe` (Number (I 2) (Unit []))
+      evaluateString "main = 4 <<mol>> / 2 <<mol>>" `shouldBe` (Number (I 2) (Unit []))
+      evaluateString "main = 4 <<cd>> / 2 <<cd>>" `shouldBe` (Number (I 2) (Unit []))
+  describe "Arithmics with prefixed units -" $ do 
+    it "Addition" $ do
+      evaluateString "main = 1 <<km>> + 400 <<m>>" `shouldBe` (Number (I 1400) (Unit [(Metre, None, 1)]))
+      -- evaluateString "main = 2 <<dam>> + 200 <<mm>>" `shouldBe` (Number (I 20200) (Unit [(Metre, Milli, 1)]))

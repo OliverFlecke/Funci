@@ -90,7 +90,7 @@ data BaseType = UnitType
               deriving (Read, Show, Eq, Ord)
 
 -- Units for number
-data Unit = Unit [(UnitPrefix, BaseUnit, Exponent)]
+data Unit = Unit [(BaseUnit, UnitPrefix, Exponent)]
   deriving (Read, Show, Eq, Ord)
 
 type Exponent = Int
@@ -128,4 +128,4 @@ data UnitPrefix = None
   | Atto    -- 10^-18 a
   | Zepto   -- 10^-21 z
   | Yocto   -- 10^-24 y
-  deriving (Read, Show, Eq, Ord)
+  deriving (Enum, Read, Show, Eq, Ord)

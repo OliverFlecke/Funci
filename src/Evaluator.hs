@@ -52,7 +52,7 @@ evalE g (Prim op) = P op []
 evalE g (App (App (Prim Sub) x) y) =
   case (evalE g x, evalE g y) of
     (Number (I x') u, Number (I y') u')  -> let (m, n, unit) = checkUnits u u' in Number (I ((m * x') - (n * y'))) unit
-    (Number (F x') u, Number (F y') u')  -> let (m, n, unit) = checkUnits u u' in Number (F ((m * x') - (n * y'))) unit
+    (Number (F x') u, Number (F y') u')  -> let (m, n, unit) = checkUnits u u' in Number (F ((x') - (y'))) unit
 evalE g (App a b) = case evalE g a of
   P op v          -> evalOp op (v ++ [evalE g b])
   C id v          -> C id (v ++ [evalE g b])
@@ -67,14 +67,14 @@ evalE g e = error $ show e
 -- Evaluate operators
 evalOp :: Operator -> [Value] -> Value
 evalOp Sub [Number (I x) unit]                = Number (I $ -x) unit
-evalOp Add [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ (m * x) + (n *y)) unit
-evalOp Add [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnits u u' in Number (F $ (m * x) + (n *y)) unit
-evalOp Sub [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ (m * x) - (n *y)) unit
-evalOp Sub [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnits u u' in Number (F $ (m * x) - (n *y)) unit
-evalOp Mul [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ (m * x) * (n *y)) unit
-evalOp Mul [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnits u u' in Number (F $ (m * x) * (n *y)) unit
-evalOp Div [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ quot (m * x) (n * y)) unit
-evalOp Div [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnits u u' in Number (F $ (m * x) / (n * y)) unit
+evalOp Add [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ (m * x) + (n * y)) unit
+evalOp Add [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnits u u' in Number (F $ (x) + (y)) unit
+evalOp Sub [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ (m * x) - (n * y)) unit
+evalOp Sub [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnits u u' in Number (F $ (x) - (y)) unit
+evalOp Mul [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnitMD (+) u u' in Number (I $ (m * x) * (n * y)) unit
+evalOp Mul [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnitMD (+) u u' in Number (F $ (x) * (y)) unit
+evalOp Div [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnitMD (-) u u' in Number (I $ quot (m * x) (n * y)) unit
+evalOp Div [Number (F x) u, Number (F y) u']  = let (m, n, unit) = checkUnitMD (-) u u' in Number (F $ (x) / (y)) unit
 evalOp Mod [Number (I x) u, Number (I y) u']  = let (m, n, unit) = checkUnits u u' in Number (I $ mod (m * x) (n * y)) unit
 
 evalOp Not [Boolean b]            = Boolean (not b)
@@ -103,5 +103,53 @@ evalOp IsEmpty  _                   = Boolean False
 
 evalOp op vs = P op vs
 
-checkUnits :: Num a => Unit -> Unit -> (a, a, Unit)
+checkUnits :: Unit -> Unit -> (Int, Int, Unit)
+checkUnits (Unit ((u, p, e):us)) (Unit ((u', p', e'):us')) =
+  if u == u' && e == e'
+    then let (m, n, Unit rest) = checkUnits (Unit us) (Unit us')
+             (m', n', pNew) = findPrefixDif p p'
+          in (m * m', n * n', Unit ((u, pNew, e):rest))
+    else error $ "Conflicting units: " ++ (show u) ++ " =/= " ++ (show u')
 checkUnits x y = if x == y then (1, 1, x) else error $ "Conflicting units: " ++ (show x) ++ " =/= " ++ (show y)
+
+checkUnitMD :: (Exponent -> Exponent -> Exponent) -> Unit -> Unit -> (Int, Int, Unit)
+checkUnitMD f (Unit []) (Unit []) = (1, 1, Unit [])
+checkUnitMD f (Unit ((u, p, e):us)) (Unit ((u', p', e'):us')) =
+  if u == u'
+    then let out@(m, n, Unit rest) = checkUnitMD f (Unit us) (Unit us')
+          in if f e e' == 0
+            then out
+            else let (m', n', pNew) = findPrefixDif p p'
+                  in (m' * m, n' * n, Unit ((u, pNew, e + e') : rest))
+    else error $ "Conflicting units: " ++ (show u) ++ " =/= " ++ (show u')
+
+findPrefixDif :: UnitPrefix -> UnitPrefix -> (Int, Int, UnitPrefix)
+findPrefixDif x y = let m = prefixValue x
+                        n = prefixValue y
+                    in if x > y
+                      then (m, n, y)
+                      else (m, n, x)
+
+-- The values which the prefixes corrispond to
+prefixValue :: UnitPrefix -> Int
+prefixValue None  = 1
+prefixValue Yotta = 10^24
+prefixValue Zetta = 10^21
+prefixValue Exa   = 10^18
+prefixValue Peta  = 10^15
+prefixValue Tera  = 10^12
+prefixValue Giga  = 10^9
+prefixValue Mega  = 10^6
+prefixValue Kilo  = 10^3
+prefixValue Hecto = 10^2
+prefixValue Deca  = 10
+prefixValue Deci  = 10^(-1)
+prefixValue Centi = 10^(-2)
+prefixValue Milli = 10^(-3)
+prefixValue Micro = 10^(-6)
+prefixValue Nano  = 10^(-9)
+prefixValue Pico  = 10^(-12)
+prefixValue Femto = 10^(-15)
+prefixValue Atto  = 10^(-18)
+prefixValue Zepto = 10^(-21)
+prefixValue Yocto = 10^(-24)
