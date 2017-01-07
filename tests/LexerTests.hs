@@ -111,7 +111,7 @@ testKeywords = hspec $ do
       lexer "let in" `shouldBe` Right [Keyword Let, Keyword In]
       lexer "abc" `shouldBe` Right [Identifier "abc"]
       lexer "a = 10" `shouldBe` Right [Identifier "a", Operator Assignment, Num 10]
-      lexer "$" `shouldBe` Left "Unexpected character: \t$\n                      \t^"
+      lexer "$" `shouldBe` Left (LexingError "Unexpected character: \t$\n                      \t^")
     it "Valid expressions" $ do 
       lexer "let x = 1 in x" `shouldBe` Right [Keyword Let, Identifier "x", Operator Assignment, Num 1, Keyword In, Identifier "x"]
 

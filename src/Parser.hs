@@ -14,11 +14,11 @@ import Data.List
 import Data.List.Split
 import Text.Regex.Posix
 
-parseString :: (Read a, Show a, Num a) => String -> Either String (Program a)
+parseString :: (Read a, Show a, Num a) => String -> Either (Exception a) (Program a)
 parseString s = lexer s >>= parse
 
-parse :: (Read a, Show a, Num a) => [Token a] -> Either String (Program a)
-parse [] = Right []
+parse :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Program a)
+parse [] = return []
 parse (Semicolon : rest)  = parse rest
 parse (Identifier id : rest) = do
   (bind, rest') <- parseBind id rest
@@ -27,7 +27,7 @@ parse (Identifier id : rest) = do
 parse tokens              = error (show tokens)
 
 -- Parse bind expressions
-parseBind :: (Read a, Show a, Num a) => String -> [Token a] -> Either String (Bind a, [Token a])
+parseBind :: (Read a, Show a, Num a) => String -> [Token a] -> Either (Exception a) (Bind a, [Token a])
 parseBind id rest =
   let (rest', vs, ty) = findParmsAndType rest []
   in
@@ -58,15 +58,15 @@ parseBind id rest =
     parseType tokens                                  = (tokens, Nothing)
 
 -- Parse let expression
-parseExpressionsString :: (Read a, Show a, Num a) => String -> Either String (Expr a)
+parseExpressionsString :: (Read a, Show a, Num a) => String -> Either (Exception a) (Expr a)
 parseExpressionsString s = lexer s >>= (\t -> fst `fmap` parseExpressions t)
 
-parseExpressions :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parseExpressions :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parseExpressions (Keyword Let : rest) = parseLet rest
   where
     findArguments (Identifier x : rest) ids        = findArguments rest (ids ++ [x])
     findArguments (Operator Assignment : rest) ids = (ids, rest)
-    parseLet :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+    parseLet :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
     parseLet (Identifier x : rest) = do
       (bind, rest') <- parseBind x rest
       case rest' of
@@ -88,21 +88,21 @@ parseExpressions (Keyword If : rest) =
         Right (e1, Keyword Else : rest'') -> do
           (e2, r) <- parseExpressions rest''
           return $ (IfThenElse b e1 e2, r)
-        Right (_, rest'')                 -> Left $ "Parser error: Expected keyword 'else' at " ++ (show rest'')
-    Right (_, rest')                -> Left $ "Parser error: Expected keyword 'then' at " ++ (show rest')
+        Right (_, rest'')                 -> Left $ ParsingError $ "Parser error: Expected keyword 'else' at " ++ (show rest'')
+    Right (_, rest')                -> Left $ ParsingError $ "Parser error: Expected keyword 'then' at " ++ (show rest')
 
 parseExpressions tokens = parseArithmic tokens
 
 -- Parsing the arithmic language
 -- Parser functions to only parse arithmics
-parseArithmicString :: (Read a, Show a, Num a) => String -> Either String (Expr a)
+parseArithmicString :: (Read a, Show a, Num a) => String -> Either (Exception a) (Expr a)
 parseArithmicString s = lexer s >>= (\t -> fst `fmap` parseArithmic t)
 
-parseArithmic :: (Read a, Show a, Num a) =>  [Token a] -> Either String (Expr a, [Token a])
+parseArithmic :: (Read a, Show a, Num a) =>  [Token a] -> Either (Exception a) (Expr a, [Token a])
 parseArithmic tokens = parse15Expr tokens
 
 -- Parsing basics like numbers and boolean
-parseBase :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parseBase :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parseBase (Semicolon : rest)            = return (End, rest)
 -- Parsing units on numbers
 parseBase (Num n : Units s : rest)      = return (Const (Number n (parseUnit s)), rest)
@@ -110,17 +110,17 @@ parseBase (Num n : rest)                = return (Const (Number n (Unit [])), re
 parseBase (Booly b : rest)              = return (Const (Boolean b), rest)
 parseBase (Identifier x : rest) = applyArgument (Var x) rest
   where
-    applyArgument :: (Read a, Show a, Num a) => Expr a -> [Token a] -> Either String (Expr a, [Token a])
+    applyArgument :: (Read a, Show a, Num a) => Expr a -> [Token a] -> Either (Exception a) (Expr a, [Token a])
     applyArgument a (Operator Sub : rest) = return (a, Operator Sub : rest)
     applyArgument a t =
       case parseArithmic t of
         Right (End, rest)     -> return (a, rest)
         Right (b, rest)       -> applyArgument (App a b) rest
         _                     -> return (a, t)
-parseBase t = Left $ "Parse error: Expecting a number or an `(` at " ++ (show t)
+parseBase t = Left $ ParsingError $ "Parse error: Expecting a number or an `(` at " ++ (show t)
 
 -- Operators with precedence level 1
-parse1Expr :: (Show a, Num a, Read a) => [Token a] -> Either String (Expr a, [Token a])
+parse1Expr :: (Show a, Num a, Read a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse1Expr (Operator Not : rest)      = applyUnaryOp rest Not
 parse1Expr (Operator Sub : rest)      = applyUnaryOp rest Sub
 parse1Expr (Operator Head : rest)     = applyUnaryOp rest Head
@@ -129,44 +129,39 @@ parse1Expr (Operator IsEmpty : rest)  = applyUnaryOp rest IsEmpty
 parse1Expr (Bracket LeftParen : rest) =
   case parseExpressions rest of
     Right (expr, Bracket RightParen : rest')  -> return (expr, rest')
-    Right (expr, rest')                       -> Left $ "Parser error: Expected `)` at " ++ (show rest)
+    Right (expr, rest')                       -> Left $ ParsingError $ "Parser error: Expected `)` at " ++ (show rest)
     Left s                                    -> Left s
 parse1Expr (Bracket LeftSquareBracket : Bracket RightSquareBracket : rest) = return (Const (Listy Empty), rest)
--- parse1Expr (Bracket LeftSquareBracket : rest) =
---   case parse15Expr rest of
---     Right (expr, Bracket RightSquareBracket : rest')  -> return (App (App (Prim ListCons) expr) (Const (Listy Empty)), rest')
---     Right (expr, rest')                               -> Left $ "Parser error: Expected `)` at " ++ (show rest)
---     Left s                                            -> Left s
 parse1Expr t = parseBase t
 
-parse2Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse2Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse2Expr tokens = parse1Expr tokens
 
-parse3Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse3Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse3Expr t = checkOps [Mul, Div, Mod] parse2Expr t >>= foldOperators
 
-parse4Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse4Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse4Expr t = checkOps [Add, Sub] parse3Expr t >>= foldOperators
 
-parse6Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse6Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse6Expr t = checkOps [Gt, Lt, Ge, Le] parse4Expr t >>= foldOperators
 
-parse7Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse7Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse7Expr t = checkOps [Eq, Ne] parse6Expr t >>= foldOperators
 
-parse11Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse11Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse11Expr t = checkOps [And] parse7Expr t >>= foldOperators
 
-parse12Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse12Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse12Expr t = checkOps [Or] parse11Expr t >>= foldOperators
 
-parse15Expr :: (Read a, Show a, Num a) => [Token a] -> Either String (Expr a, [Token a])
+parse15Expr :: (Read a, Show a, Num a) => [Token a] -> Either (Exception a) (Expr a, [Token a])
 parse15Expr t = do
   (exprs, r, ops) <- checkOps [ListCons] parse12Expr t
   foldOperators (reverse exprs, r, ops)
 
 -- Helper functions
-checkOps :: [Operator] -> ([Token a] -> Either String (Expr a, [Token a])) -> [Token a] -> Either String ([Expr a], [Token a], [Operator])
+checkOps :: [Operator] -> ([Token a] -> Either (Exception a) (Expr a, [Token a])) -> [Token a] -> Either (Exception a) ([Expr a], [Token a], [Operator])
 checkOps ops f t =
   case f t of
     Right (expr, Operator op : rest)  ->
@@ -179,7 +174,7 @@ checkOps ops f t =
 applyOperator :: Operator -> (Expr a -> Expr a -> Expr a)
 applyOperator op = (\x -> (App (App (Prim op) x)))
 
-applyUnaryOp :: (Read a, Show a, Num a) => [Token a] -> Operator -> Either String (Expr a, [Token a])
+applyUnaryOp :: (Read a, Show a, Num a) => [Token a] -> Operator -> Either (Exception a) (Expr a, [Token a])
 applyUnaryOp rest op = parse1Expr rest >>= (\(e, rest') -> return (App (Prim op) e, rest'))
 
 -- Create a list of functions to apply operators
@@ -188,10 +183,10 @@ createOpExprFuncs [] = []
 createOpExprFuncs (op:ops) = applyOperator op : createOpExprFuncs ops
 
 -- Might need a better name, but this is what it does
-concatExprUsingOp :: Expr a -> Operator -> (([Expr a], [Token a], [Operator]) -> Either String ([Expr a], [Token a], [Operator]))
+concatExprUsingOp :: Expr a -> Operator -> (([Expr a], [Token a], [Operator]) -> Either (Exception a) ([Expr a], [Token a], [Operator]))
 concatExprUsingOp expr op = (\(exprs, rt, ops) -> return (expr : exprs, rt, op : ops))
 
-foldOperators :: ([Expr a], [Token a], [Operator]) -> Either String (Expr a, [Token a])
+foldOperators :: ([Expr a], [Token a], [Operator]) -> Either (Exception a) (Expr a, [Token a])
 foldOperators = (\((e : exprs), rest, ops) -> return $ (foldlWfs (createOpExprFuncs ops) e exprs, rest))
   where
     -- Alternative version of foldl which can fold with multible functions

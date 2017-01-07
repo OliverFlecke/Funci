@@ -3,11 +3,23 @@ module Syntax where
 import Data.List
 import qualified Environment as E
 
-type (VEnv a) = E.Env (Value a)
+type VEnv a = E.Env (Value a)
 type Program a = [Bind a]
 type Id = String
 
 data Bind a = Bind Id (Maybe QType) [Id] (Expr a)
+  deriving (Read, Show, Eq, Ord)
+
+-- Exceptions
+data Exception a = 
+  LexingError String
+  | ParsingError String
+  -- Evaluator errors
+  | EvaluatorError String
+  | InvalidUnits BaseUnit BaseUnit
+  | DivideByZero
+  | ScopeError Id (VEnv a)
+  | TypeError Type Type
   deriving (Read, Show, Eq, Ord)
 
 -- Tokens which the input can be transformed into
@@ -88,9 +100,10 @@ data BaseType = UnitType
               deriving (Read, Show, Eq, Ord)
 
 -- Units for number
-data Unit = Unit [(BaseUnit, UnitPrefix, Exponent)]
+data Unit = Unit [SingleUnit]
   deriving (Read, Show, Eq, Ord)
 
+type SingleUnit = (BaseUnit, UnitPrefix, Exponent)
 type Exponent = Int
 
 data BaseUnit =
@@ -152,7 +165,7 @@ formatUnit u          = " <<" ++ (intercalate " * " $ formatUnit' u) ++ ">>"
     formatUnit' (Unit [])     = []
     formatUnit' (Unit (u:us)) = (prettyUnit u) : formatUnit' (Unit us)
 
-prettyUnit :: (BaseUnit, UnitPrefix, Exponent) -> String
+prettyUnit :: SingleUnit -> String
 prettyUnit (u, p, e) = (prefixToString p) ++ (baseUnitToString u) ++ (expoString e)
   where expoString e = if e == 1 then "" else ("^" ++ (show e))
 

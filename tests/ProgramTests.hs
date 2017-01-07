@@ -58,7 +58,7 @@ generateTestCases path _ = error $ "Missing test file at: " ++ path
 generateTest :: (String, String) -> IO ()
 generateTest (file, output) = do 
   program <- readFile file 
-  let result = evaluateString program
+  let Right result = evaluateString program
   e <- readFile output
   let expected = readValue e
   hspec $ describe ("Testing : " ++ file) $ it ("Program: " ++ program) $ result `shouldBe` expected

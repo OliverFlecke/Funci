@@ -8,112 +8,131 @@ import Lexer
 import Parser
 import qualified Environment as E
 
-evaluateString :: (Read a, Show a, Ord a, Num a, RealFrac a) => String -> Value a
+evaluateString :: (Read a, Show a, Ord a, Num a, RealFrac a) => String -> Either (Exception a) (Value a)
 evaluateString s = do
-    let Right ts = lexer s
-    case parse ts of
-        Right p -> evaluate p
-        Left s  -> error s
+    ts <- lexer s
+    p <- parse ts
+    evaluate p
 
-evaluate :: (Read a, Show a, Ord a, Num a, RealFrac a) => Program a -> Value a
+evaluate :: (Read a, Show a, Ord a, Num a, RealFrac a) => Program a -> Either (Exception a) (Value a)
 evaluate p = evalP E.empty p
 
-evalP :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> Program a -> Value a
+evalP :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> Program a -> Either (Exception a) (Value a)
 evalP g [] =
   case E.lookup g "main" of
     Just (Fun g' [] e)  -> evalE g e
-    Nothing             -> error $ "Could not find the main function" ++ (show g)
+    Nothing             -> Left $ ScopeError "main" g
 evalP g (Bind f _ vs e : rest) =
   let g' = E.add g (f, Fun E.empty vs e)
   in evalP g' rest
 
 -- Evaluate an expression
-evalE :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> Expr a -> Value a
-evalE g (Const n) = n
+evalE :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> Expr a -> Either (Exception a) (Value a)
+evalE g (Const n) = return n
 evalE g (Var x)   =
   case E.lookup g x of
     Just (Fun g' [] e)  -> evalE (E.union g' g) e
-    Just (Fun g' vs e)  -> Fun (E.union g' g) vs e
-    Just n              -> n
-    Nothing -> error $ "Variable was not in the environment. \nVar: " ++ (show x) ++ "\nEnv: " ++ (show g)
+    Just (Fun g' vs e)  -> return $ Fun (E.union g' g) vs e
+    Just n              -> return n
+    Nothing -> Left $ ScopeError x g
 
 evalE g (LetIn ((Bind x _ ids e):[]) b) = let g' = E.add g (x, Fun g ids e)
                                 in evalE g' b
 evalE g (LetIn ((Bind x _ ids e):xs) b) = let g' = E.add g (x, Fun g ids e)
                                 in evalE g' (LetIn xs b)
 
-evalE g (IfThenElse b t f) =
-  case evalE g b of
+evalE g (IfThenElse b t f) = do
+  b' <- evalE g b
+  case b' of
     Boolean True  -> evalE g t
     Boolean False -> evalE g f
-    _             -> error $ (show b) ++ " - This should return a boolean value"
+    _             -> Left $ EvaluatorError $ (show b) ++ " should have type bool"
 
-evalE g (Prim op) = P op []
-evalE g (App (App (Prim Sub) x) y) =
-  case (evalE g x, evalE g y) of
-    (Number x' u, Number y' u')  -> let (m, n, unit) = checkUnits u u' in Number (m * x' - n * y') unit
-    -- (Number x' u, Number y' u')  -> let (m, n, unit) = checkUnits u u' in Number ((x') - (y'))) unit
+-- Applying operators
+evalE g (Prim op) = return $ P op []
+evalE g (App (App (Prim Sub) x) y) = do
+  ex <- evalE g x
+  ey <- evalE g y
+  case (ex, ey) of
+    (Number x' u, Number y' u')  -> checkUnits u u' >>= applyOp (-) x' y'
+
 evalE g (App a b) = case evalE g a of
-  P op v          -> evalOp op (v ++ [evalE g b])
-  C id v          -> C id (v ++ [evalE g b])
-  Fun g' (v:[]) e -> let g'' = E.add g' (v, evalE g b)
-                      in evalE g'' e
-  Fun g' (v:vs) e -> let g'' = E.add g' (v, evalE g b)
-                      in Fun g'' vs e
-  t               -> error $ "Could not be evaluated: " ++ (show t) ++ "\n" ++ (show a) ++ "\n" ++ (show b)
+  Right (P op v)          -> do
+    b' <- evalE g b
+    evalOp op (v ++ [b'])
+  Right (C id v)          -> do
+    b' <- evalE g b
+    return $ C id (v ++ [b'])
+  Right (Fun g' (v:[]) e) -> do
+    b' <- evalE g b
+    let g'' = E.add g' (v, b')
+    evalE g'' e
+  Right (Fun g' (v:vs) e) -> do
+    b' <- evalE g b
+    let g'' = E.add g' (v, b')
+    return $ Fun g'' vs e
+  Left s                  -> Left s
+  t                       -> Left $ EvaluatorError $ "Could not be evaluated: " ++ (show t) ++ "\n" ++ (show a) ++ "\n" ++ (show b)
 
-evalE g e = error $ show e
+evalE g e = Left $ EvaluatorError $ show e
+
+applyOp :: Num a => (a -> a -> a) -> a -> a -> (a, a, Unit) -> Either (Exception a) (Value a)
+applyOp op x y = (\(m, n, unit) -> return $ Number ((m * x) `op` (n * y)) unit)
 
 -- Evaluate operators
-evalOp :: (Read a, Show a, Num a, Ord a, RealFrac a) => Operator -> [Value a] -> Value a
-evalOp Sub [Number x unit]                = Number (-x) unit
-evalOp Add [Number x u, Number y u']  = let (m, n, unit) = checkUnits u u' in Number ((m * x) + (n * y)) unit
-evalOp Sub [Number x u, Number y u']  = let (m, n, unit) = checkUnits u u' in Number ((m * x) - (n * y)) unit
-evalOp Mul [Number x u, Number y u']  = let (m, n, unit) = checkUnitMD (+) u u' in Number ((m * x) * (n * y)) unit
-evalOp Div [_         , Number 0 _ ]  = error $ "Divide by zero"
-evalOp Div [Number x u, Number y u']  = let (m, n, unit) = checkUnitMD (-) u u' in Number ((m * x) / (n * y)) unit
+evalOp :: (Read a, Show a, Num a, Ord a, RealFrac a) => Operator -> [Value a] -> Either (Exception a) (Value a)
+evalOp Sub [Number x u]               = return $ Number (-x) u
+evalOp Add [Number x u, Number y u']  = checkUnits u u' >>= applyOp (+) x y
+evalOp Sub [Number x u, Number y u']  = checkUnits u u' >>= applyOp (-) x y
+evalOp Mul [Number x u, Number y u']  = checkUnitMD (+) u u' >>= applyOp (*) x y
+evalOp Div [_         , Number 0 _ ]  = Left $ DivideByZero
+evalOp Div [Number x u, Number y u']  = checkUnitMD (-) u u' >>= applyOp (/) x y
 -- Really find a better way to include the mod operator
-evalOp Mod [Number x u, Number y u']  = let (m, n, unit) = checkUnits u u' in Number (fromIntegral $ mod (floor $ m * x) (floor $ n * y)) unit
+evalOp Mod [Number x u, Number y u']  = do
+  (m, n, unit) <- checkUnits u u'
+  return $ Number (fromIntegral $ mod (floor $ m * x) (floor $ n * y)) unit
 
-evalOp Not [Boolean b]            = Boolean (not b)
-evalOp And [Boolean x, Boolean y] = Boolean (x && y)
-evalOp Or  [Boolean x, Boolean y] = Boolean (x || y)
+evalOp Not [Boolean b]            = return $ Boolean (not b)
+evalOp And [Boolean x, Boolean y] = return $ Boolean (x && y)
+evalOp Or  [Boolean x, Boolean y] = return $ Boolean (x || y)
 
-evalOp Eq  [Number x u, Number y u']  = Boolean (x == y)
-evalOp Ne  [Number x u, Number y u']  = Boolean (not $ x == y)
-evalOp Gt  [Number x u, Number y u']  = Boolean (x > y)
-evalOp Lt  [Number x u, Number y u']  = Boolean (x < y)
-evalOp Ge  [Number x u, Number y u']  = Boolean (x >= y)
-evalOp Le  [Number x u, Number y u']  = Boolean (x <= y)
+evalOp Eq  [Number x u, Number y u']  = return $ Boolean (x == y)
+evalOp Ne  [Number x u, Number y u']  = return $ Boolean (not $ x == y)
+evalOp Gt  [Number x u, Number y u']  = return $ Boolean (x > y)
+evalOp Lt  [Number x u, Number y u']  = return $ Boolean (x < y)
+evalOp Ge  [Number x u, Number y u']  = return $ Boolean (x >= y)
+evalOp Le  [Number x u, Number y u']  = return $ Boolean (x <= y)
 
-evalOp ListCons [Listy Empty, v]    = Listy (Cons v Empty)
-evalOp ListCons [Listy l,     v]    = Listy (Cons v l)
-evalOp Head     [Listy (Cons v _)]  = v
-evalOp Tail     [Listy (Cons _ l)]  = Listy l
-evalOp IsEmpty  [Listy Empty]       = Boolean True
-evalOp IsEmpty  _                   = Boolean False
+evalOp ListCons [Listy Empty, v]    = return $ Listy (Cons v Empty)
+evalOp ListCons [Listy l,     v]    = return $ Listy (Cons v l)
+evalOp Head     [Listy (Cons v _)]  = return $ v
+evalOp Tail     [Listy (Cons _ l)]  = return $ Listy l
+evalOp IsEmpty  [Listy Empty]       = return $ Boolean True
+evalOp IsEmpty  _                   = return $ Boolean False
 
-evalOp op vs = P op vs
+evalOp op vs = return $ P op vs
 
-checkUnits :: Fractional a => Unit -> Unit -> (a, a, Unit)
+checkUnits :: Fractional a => Unit -> Unit -> Either (Exception a) (a, a, Unit)
+checkUnits (Unit []) (Unit []) = return (1, 1, Unit [])
 checkUnits (Unit ((u, p, e):us)) (Unit ((u', p', e'):us')) =
   if u == u' && e == e'
-    then let (m, n, Unit rest) = checkUnits (Unit us) (Unit us')
-             (m', n', pNew) = newPrefix p p'
-          in (m * m', n * n', Unit ((u, pNew, e):rest))
-    else error $ "Conflicting units: " ++ (show u) ++ " =/= " ++ (show u')
-checkUnits x y = if x == y then (1, 1, x) else error $ "Conflicting units: " ++ (show x) ++ " =/= " ++ (show y)
+    then do
+      (m, n, Unit rest) <- checkUnits (Unit us) (Unit us')
+      let (m', n', pNew) = newPrefix p p'
+      return (m * m', n * n', Unit ((u, pNew, e):rest))
+    else Left $ InvalidUnits u u'
 
-checkUnitMD :: Fractional a => (Exponent -> Exponent -> Exponent) -> Unit -> Unit -> (a, a, Unit)
-checkUnitMD f (Unit []) (Unit []) = (1, 1, Unit [])
+checkUnitMD :: Fractional a => (Exponent -> Exponent -> Exponent) -> Unit -> Unit -> Either (Exception a) (a, a, Unit)
+checkUnitMD f (Unit []) (Unit []) = return (1, 1, Unit [])
 checkUnitMD f (Unit ((u, p, e):us)) (Unit ((u', p', e'):us')) =
   if u == u'
-    then let out@(m, n, Unit rest) = checkUnitMD f (Unit us) (Unit us')
-          in if f e e' == 0
-            then out
-            else let (m', n', pNew) = newPrefix p p'
-                  in (m' * m, n' * n, Unit ((u, pNew, f e e') : rest))
-    else error $ "Conflicting units: " ++ (show u) ++ " =/= " ++ (show u')
+    then do
+      out@(m, n, Unit rest) <- checkUnitMD f (Unit us) (Unit us')
+      if f e e' == 0
+        then return out
+        else let (m', n', pNew) = newPrefix p p'
+              in return (m' * m, n' * n, Unit ((u, pNew, f e e') : rest))
+    else Left $ InvalidUnits u u'
 
 newPrefix :: (Num a, Fractional a) => UnitPrefix -> UnitPrefix -> (a, a, UnitPrefix)
 newPrefix x y = let m = prefixValue x

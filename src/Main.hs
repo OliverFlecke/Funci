@@ -15,7 +15,9 @@ main = do
     file:rest -> do 
       putStrLn $ file
       program <- readFile file
-      printValue $ evaluateString program
+      case evaluateString program of 
+        Left s  -> errorHandling s 
+        Right v -> printValue v
 
 interactive :: IO () 
 interactive = do 
@@ -25,5 +27,16 @@ interactive = do
   if expression == "exit"
   then exitSuccess
   else do 
-    printValue $ evaluateString expression
+    case evaluateString expression of 
+      Left s  -> errorHandling s
+      Right v -> printValue v
     interactive
+
+errorHandling :: Show a => Exception a -> IO () 
+errorHandling DivideByZero        = putStrLn "Divide by zero is not allowed"
+errorHandling (LexingError s)     = putStrLn $ "Lexing error: " ++ s
+errorHandling (ParsingError s)    = putStrLn $ "Parsing error: " ++ s
+errorHandling (EvaluatorError s)  = putStrLn $ "Evaluator error: " ++ s
+errorHandling (ScopeError x g)    = putStrLn $ "Variable '" ++ x ++ "' not in scope in environment " ++ (show g)
+errorHandling (TypeError x y)     = putStrLn $ "Types are not matching: " ++ (show x) ++ " should be " ++ (show y)
+errorHandling e = undefined

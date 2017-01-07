@@ -3,12 +3,12 @@ module Lexer (lexer) where
 import Data.Char
 import Syntax
 
-addToken :: (Read a, Num a) => Token a -> String -> Either String [Token a]
-addToken t s = lexer s >>= (\ts -> Right $ t : ts)
+addToken :: (Read a, Num a) => Token a -> String -> Either (Exception a) [Token a]
+addToken t s = lexer s >>= (\ts -> return $ t : ts)
 
 -- Function to convert a string into a list of tokens
-lexer :: (Read a, Num a) => String -> Either String [Token a]
-lexer "" = Right []
+lexer :: (Read a, Num a) => String -> Either (Exception a) [Token a]
+lexer "" = return []
 
 -- Handling whitespace
 lexer (' ':cs) = lexer cs
@@ -107,6 +107,5 @@ lexer (c : cs) | isLetter c =
       | otherwise     = Identifier s
 
 -- Error handling
--- Is it possible to get a line and/or column number
-lexer s = Left $ "Unexpected character: \t" ++ s
+lexer s = Left $ LexingError $ "Unexpected character: \t" ++ s
       ++ "\n                      \t^"
