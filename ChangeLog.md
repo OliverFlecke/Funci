@@ -4,6 +4,12 @@
 
 This version should contain a fully working compiler for compiling a functional language, capable of handling semilar syntax to haskell. Numbers in this language should also be able to 'unit-check' between units (like meters, seconds, and so on).
 
+#### 0.1.4.4   -- 2017-01-07
+
+* Main updated to include an interactive terminal, which are able to run programs writen directly in the terminal.
+  * Should later be extended with an environment to store values between commands.
+* Values can now be pretty printed, which removes the abstract syntax around the actual data.
+
 #### 0.1.4.3   -- 2017-01-07
 
 * The syntax has been rewriten to use a more generic type. Numbers are no longer limited to int or float.

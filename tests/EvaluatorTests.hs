@@ -167,7 +167,7 @@ evaluatingNumbersWithUnits = hspec $ do
       evaluateString "main = 1 <<K>> + 1 <<K>>" `shouldBe` (Number 2 (Unit [(Kelvin, None, 1)]))
       evaluateString "main = 1 <<mol>> + 1 <<mol>>" `shouldBe` (Number 2 (Unit [(Mole, None, 1)]))
       evaluateString "main = 1 <<cd>> + 1 <<cd>>" `shouldBe` (Number 2 (Unit [(Candela, None, 1)]))
-    it "Subtration" $ do 
+    it "Subtraction" $ do 
       evaluateString "main = 1 <<m>> - 1 <<m>>" `shouldBe` (Number 0 (Unit [(Metre, None, 1)]))
       evaluateString "main = 1 <<s>> - 1 <<s>>" `shouldBe` (Number 0 (Unit [(Second, None, 1)]))
       evaluateString "main = 1 <<g>> - 1 <<g>>" `shouldBe` (Number 0 (Unit [(Gram, None, 1)]))
@@ -194,4 +194,19 @@ evaluatingNumbersWithUnits = hspec $ do
   describe "Arithmics with prefixed units -" $ do 
     it "Addition" $ do
       evaluateString "main = 1 <<km>> + 400 <<m>>" `shouldBe` (Number 1400 (Unit [(Metre, None, 1)]))
-      -- evaluateString "main = 2 <<dam>> + 200 <<mm>>" `shouldBe` (Number 20200 (Unit [(Metre, Milli, 1)]))
+      evaluateString "main = 1 <<dam>> + 200 <<mm>>" `shouldBe` (Number 10200 (Unit [(Metre, Milli, 1)]))
+      evaluateString "main = 10 <<A^2>> + 20 <<mA^2>>" `shouldBe` (Number 10020 (Unit [(Ampere, Milli, 2)]))
+      evaluateString "main = 1 <<>> + 2 <<>>" `shouldBe` (Number 3 (Unit []))
+    it "Subtraction" $ do 
+      evaluateString "main = 10 <<km>> - 100 <<dam>>" `shouldBe` (Number 900 (Unit [(Metre, Deca, 1)]))
+    it "Multiplication" $ do 
+      evaluateString "main = 10 <<km>> * 10 <<km>>" `shouldBe` (Number 100 (Unit [(Metre, Kilo, 2)]))
+      evaluateString "main = 10 <<km>> * 10 <<m>>" `shouldBe` (Number 100000 (Unit [(Metre, None, 2)]))
+      evaluateString "main = 10 <<m>> * 10 <<m^-1>>" `shouldBe` (Number 100 (Unit []))
+      evaluateString "main = 10 <<m^3>> * 10 <<m^5>>" `shouldBe` (Number 100 (Unit [(Metre, None, 8)]))
+    it "Division" $ do 
+      evaluateString "main = 10 <<m>> / 5 <<m>>" `shouldBe` (Number 2 (Unit []))
+      evaluateString "main = 10 <<m^2>> / 2 <<m>>" `shouldBe` (Number 5 (Unit [(Metre, None, 1)]))
+  describe "Arithmics with multiple units -" $ do 
+    it "Metres and seconds" $ do 
+      evaluateString "main = 10 <<m * s>> + 20 <<m * s>>" `shouldBe` (Number 30 (Unit [(Metre, None, 1), (Second, None, 1)]))

@@ -3,8 +3,6 @@ module Evaluator (
   evaluate
   ) where
 
-import Data.Typeable
-
 import Syntax
 import Lexer
 import Parser
@@ -97,53 +95,54 @@ evalOp IsEmpty  _                   = Boolean False
 
 evalOp op vs = P op vs
 
-checkUnits :: Num a => Unit -> Unit -> (a, a, Unit)
+checkUnits :: Fractional a => Unit -> Unit -> (a, a, Unit)
 checkUnits (Unit ((u, p, e):us)) (Unit ((u', p', e'):us')) =
   if u == u' && e == e'
     then let (m, n, Unit rest) = checkUnits (Unit us) (Unit us')
-             (m', n', pNew) = findPrefixDif p p'
+             (m', n', pNew) = newPrefix p p'
           in (m * m', n * n', Unit ((u, pNew, e):rest))
     else error $ "Conflicting units: " ++ (show u) ++ " =/= " ++ (show u')
 checkUnits x y = if x == y then (1, 1, x) else error $ "Conflicting units: " ++ (show x) ++ " =/= " ++ (show y)
 
-checkUnitMD :: Num a => (Exponent -> Exponent -> Exponent) -> Unit -> Unit -> (a, a, Unit)
+checkUnitMD :: Fractional a => (Exponent -> Exponent -> Exponent) -> Unit -> Unit -> (a, a, Unit)
 checkUnitMD f (Unit []) (Unit []) = (1, 1, Unit [])
 checkUnitMD f (Unit ((u, p, e):us)) (Unit ((u', p', e'):us')) =
   if u == u'
     then let out@(m, n, Unit rest) = checkUnitMD f (Unit us) (Unit us')
           in if f e e' == 0
             then out
-            else let (m', n', pNew) = findPrefixDif p p'
-                  in (m' * m, n' * n, Unit ((u, pNew, e + e') : rest))
+            else let (m', n', pNew) = newPrefix p p'
+                  in (m' * m, n' * n, Unit ((u, pNew, f e e') : rest))
     else error $ "Conflicting units: " ++ (show u) ++ " =/= " ++ (show u')
 
-findPrefixDif :: Num a => UnitPrefix -> UnitPrefix -> (a, a, UnitPrefix)
-findPrefixDif x y = let m = prefixValue x
-                        n = prefixValue y
-                    in if x > y
-                      then (m, n, y)
-                      else (m, n, x)
+newPrefix :: (Num a, Fractional a) => UnitPrefix -> UnitPrefix -> (a, a, UnitPrefix)
+newPrefix x y = let m = prefixValue x
+                    n = prefixValue y
+                    diff = 10^^(m - n)
+                in if x < y
+                    then (1, diff, x)
+                    else (diff, 1, y)
 
 -- The values which the prefixes corrispond to
 prefixValue :: Num a => UnitPrefix -> a
-prefixValue None  = 1
-prefixValue Yotta = 10^24
-prefixValue Zetta = 10^21
-prefixValue Exa   = 10^18
-prefixValue Peta  = 10^15
-prefixValue Tera  = 10^12
-prefixValue Giga  = 10^9
-prefixValue Mega  = 10^6
-prefixValue Kilo  = 10^3
-prefixValue Hecto = 10^2
-prefixValue Deca  = 10
-prefixValue Deci  = 10^(-1)
-prefixValue Centi = 10^(-2)
-prefixValue Milli = 10^(-3)
-prefixValue Micro = 10^(-6)
-prefixValue Nano  = 10^(-9)
-prefixValue Pico  = 10^(-12)
-prefixValue Femto = 10^(-15)
-prefixValue Atto  = 10^(-18)
-prefixValue Zepto = 10^(-21)
-prefixValue Yocto = 10^(-24)
+prefixValue Yotta = 24
+prefixValue Zetta = 21
+prefixValue Exa   = 18
+prefixValue Peta  = 15
+prefixValue Tera  = 12
+prefixValue Giga  = 9
+prefixValue Mega  = 6
+prefixValue Kilo  = 3
+prefixValue Hecto = 2
+prefixValue Deca  = 1
+prefixValue None  = 0
+prefixValue Deci  = (-1)
+prefixValue Centi = (-2)
+prefixValue Milli = (-3)
+prefixValue Micro = (-6)
+prefixValue Nano  = (-9)
+prefixValue Pico  = (-12)
+prefixValue Femto = (-15)
+prefixValue Atto  = (-18)
+prefixValue Zepto = (-21)
+prefixValue Yocto = (-24)

@@ -27,7 +27,9 @@ lexer (';':cs) = addToken Semicolon cs
 -- For handling units on number
 lexer ('<':'<':cs)  =
   let (unit, '>' : '>' : cs') = break (\c -> c == '>') cs
-  in addToken (Units unit) cs'
+  in if null unit
+    then lexer cs'
+    else addToken (Units unit) cs'
 
 -- Types
 lexer ('(':')':cs)              = addToken (BType UnitType) cs

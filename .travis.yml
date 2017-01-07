@@ -9,9 +9,10 @@ install:
 
 script: 
   cabal configure --enable-tests && cabal build && 
-  cabal test Lexer && cabal test Parser && cabal test Evaluator
+  cabal test Lexer && cabal test Parser && cabal test Evaluator && cabal test UnitParsing
+  # cabal test # Need to fix the build, so it can run all the tests
 
-branches:
-  only:
-    - master
-    - stable
+# branches:
+#   only:
+#     - master
+#     - stable
