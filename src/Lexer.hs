@@ -3,11 +3,11 @@ module Lexer (lexer) where
 import Data.Char
 import Syntax
 
-addToken :: Token -> String -> Either String [Token]
+addToken :: (Read a, Num a) => Token a -> String -> Either String [Token a]
 addToken t s = lexer s >>= (\ts -> Right $ t : ts)
 
 -- Function to convert a string into a list of tokens
-lexer :: String -> Either String [Token]
+lexer :: (Read a, Num a) => String -> Either String [Token a]
 lexer "" = Right []
 
 -- Handling whitespace
@@ -25,8 +25,8 @@ lexer ('-':'-':cs) =
 lexer (';':cs) = addToken Semicolon cs
 
 -- For handling units on number
-lexer ('<':'<':cs)  = 
-  let (unit, '>' : '>' : cs') = break (\c -> c == '>') cs 
+lexer ('<':'<':cs)  =
+  let (unit, '>' : '>' : cs') = break (\c -> c == '>') cs
   in addToken (Units unit) cs'
 
 -- Types
@@ -78,12 +78,9 @@ lexer ('F':'a':'l':'s':'e' : cs) = addToken (Booly False) cs
 
 
 -- Find digits in the string
-lexer cs@(c : _ )      | isDigit c = 
+lexer cs@(c : _ )      | isDigit c =
   let (digits, cs') = break (not . isDigitOrDot) $ cs
-  in case countDots digits of
-    0 -> addToken (Num (I (read digits))) cs'
-    1 -> addToken (Num (F (read digits))) cs'
-    _ -> Left "Could not parse: number contains too many '.'"
+  in addToken (Num (read digits)) cs'
   where
     isDigitOrDot :: Char -> Bool
     isDigitOrDot c = isDigit c || c == '.'
@@ -96,7 +93,6 @@ lexer (c : cs) | isLetter c =
   in addToken (toIdOrKeyword id) cs'
   where
     isValidChar c = isAlphaNum c || elem c "^-"
-    toIdOrKeyword :: String -> Token
     toIdOrKeyword s
       | s == "if"     = Keyword If
       | s == "then"   = Keyword Then
@@ -112,4 +108,3 @@ lexer (c : cs) | isLetter c =
 -- Is it possible to get a line and/or column number
 lexer s = Left $ "Unexpected character: \t" ++ s
       ++ "\n                      \t^"
-

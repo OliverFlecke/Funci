@@ -61,8 +61,7 @@ generateTest (file, output) = do
   let result = evaluateString program
   e <- readFile output
   let expected = readValue e
-  -- return $ TestLabel ("File: " ++ file) $ TestCase $ assertEqual ("Program: " ++ program ++ "\nOutput:  " ++ (show expected)) result expected
   hspec $ describe ("Testing : " ++ file) $ it ("Program: " ++ program) $ result `shouldBe` expected
   where 
-    readValue :: String -> Value 
+    readValue :: (Read a) => String -> Value a 
     readValue s = read s

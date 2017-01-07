@@ -2,18 +2,18 @@ module Syntax where
 
 import qualified Environment as E
 
-type Program = [Bind]
+type Program a = [Bind a]
 type Id = String
 
-data Bind = Bind Id (Maybe QType) [Id] Expr
+data Bind a = Bind Id (Maybe QType) [Id] (Expr a)
   deriving (Read, Show, Eq, Ord)
 
-data NumType = I Int | F Float
-  deriving (Read, Show, Eq, Ord)
+-- data NumType = I Int | F Float
+--   deriving (Read, Show, Eq, Ord)
 
 -- Tokens which the input can be transformed into
-data Token =
-  Num NumType
+data Token a =
+  Num a
   | Booly Bool
   | BType BaseType
   | Keyword Keywords
@@ -27,26 +27,26 @@ data Token =
 
 data List a = Empty | Cons a (List a) deriving (Read, Show, Eq, Ord)
 
-type VEnv = E.Env Value
+type (VEnv a) = E.Env (Value a)
 -- This is the values which the program should be able to return
-data Value = Number NumType Unit
+data Value a = Number a Unit
            | Boolean Bool
-           | Listy (List Value)
-           | Fun VEnv [Id] Expr
-           | P Operator [Value]
-           | C Id [Value]
+           | Listy (List (Value a))
+           | Fun (VEnv a) [Id] (Expr a)
+           | P Operator [Value a]
+           | C Id [Value a]
            deriving (Read, Show, Eq, Ord)
 
 -- And this is what the parser should output
 -- (eventually turned into a valid program)
-data Expr =
+data Expr a =
   End
-  | Const Value
+  | Const (Value a)
   | Var Id
   | Prim Operator
-  | App Expr Expr
-  | LetIn [Bind] Expr
-  | IfThenElse Expr Expr Expr
+  | App (Expr a) (Expr a)
+  | LetIn [Bind a] (Expr a)
+  | IfThenElse (Expr a) (Expr a) (Expr a)
   deriving (Read, Show, Eq, Ord)
 
 data Keywords =

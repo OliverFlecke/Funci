@@ -4,6 +4,14 @@
 
 This version should contain a fully working compiler for compiling a functional language, capable of handling semilar syntax to haskell. Numbers in this language should also be able to 'unit-check' between units (like meters, seconds, and so on).
 
+#### 0.1.4.3   -- 2017-01-07
+
+* The syntax has been rewriten to use a more generic type. Numbers are no longer limited to int or float.
+  * The lexer and parser functions instead have Num a has type constrain.
+  * The evalutor also has the RealFrac a type constants, as this allows for division
+* This has simplied most of the manual handling of numbers, but added a bit of issues with division. This is currently solved by converting back and forth between the RealFrac and Integral types.
+* Tests has been updated to support the new representation of numbers.
+
 #### 0.1.4.2   -- 2017-01-06
 
 * Unit system can now handle some addition and multiplcation expressions, althrough it is not working with everything yet.
