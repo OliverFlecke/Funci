@@ -5,7 +5,8 @@ module Parser (
   parseString,
   parse,
   parseArithmicString,
-  parseExpressionsString) where
+  parseExpressionsString,
+  parseExpressions) where
 
 import Syntax
 import Lexer
@@ -70,13 +71,14 @@ parseExpressions (Keyword Let : rest) = parseLet rest
     parseLet (Identifier x : rest) = do
       (bind, rest') <- parseBind x rest
       case rest' of
-        Keyword In : rest'' -> do
+        Keyword In : rest''     -> do
           (body, r) <- parseExpressions rest''
           return $ (LetIn [bind] body, r)
         Operator Comma : rest'' -> do
           (LetIn xs body, r) <- parseLet rest''
           return $ (LetIn (bind : xs) body, r)
-        rest''              -> error $ "\nBefore: " ++ (show rest) ++ "\n\nAfter:  " ++ (show rest'') ++ "\nBind: " ++ (show bind)
+        rest''                  -> return $ (LetIn [bind] End, rest'')
+        -- rest''              -> error $ "\nBefore: " ++ (show rest) ++ "\n\nAfter:  " ++ (show rest'') ++ "\nBind: " ++ (show bind)
 
 -- Parsing if expressions
 parseExpressions (Keyword If : rest) =

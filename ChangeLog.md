@@ -4,7 +4,12 @@
 
 This version should contain a fully working compiler for compiling a functional language, capable of handling semilar syntax to haskell. Numbers in this language should also be able to 'unit-check' between units (like meters, seconds, and so on).
 
-#### 0.1.4.5   -- 2017-01-07 
+#### 0.1.4.6   -- 2017-01-12
+
+* Updated interactive to handle bindings. This is done by it having a global environment.
+* Interactive parses expressions instead of full programs now, making it more flexible.
+
+#### 0.1.4.5   -- 2017-01-07
 
 * Error handling changed for all levels to an Exception type instead of just a string.
 * Interactive will now continue until 'exit' is entered.

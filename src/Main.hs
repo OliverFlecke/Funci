@@ -4,14 +4,16 @@ import System.Environment
 import System.Directory
 import System.IO
 import System.Exit
+import Data.Text
 import Evaluator
+import qualified Environment as E 
 import Syntax
 
 main :: IO ()
 main = do
   args <- getArgs
   case args of 
-    []        -> interactive
+    []        -> interactive E.empty
     file:rest -> do 
       putStrLn $ file
       program <- readFile file
@@ -19,18 +21,20 @@ main = do
         Left s  -> errorHandling s 
         Right v -> printValue v
 
-interactive :: IO () 
-interactive = do 
+interactive :: (Read a, Show a, RealFrac a) => VEnv a -> IO () 
+interactive g = do 
   putStr ">> "
   hFlush stdout
   expression <- getLine 
-  if expression == "exit"
+  if (unpack (strip $ pack expression)) == "exit"
   then exitSuccess
   else do 
-    case evaluateString expression of 
+    case evaluateStringWithEnv g expression of 
       Left s  -> errorHandling s
+      Right f@(Fun x _ _ _) -> let g' = E.add g (x, f)
+                                in interactive g' 
       Right v -> printValue v
-    interactive
+    interactive g
 
 errorHandling :: Show a => Exception a -> IO () 
 errorHandling DivideByZero        = putStrLn "Divide by zero is not allowed"

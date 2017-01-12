@@ -42,7 +42,7 @@ data List a = Empty | Cons a (List a) deriving (Read, Show, Eq, Ord)
 data Value a = Number a Unit
            | Boolean Bool
            | Listy (List (Value a))
-           | Fun (VEnv a) [Id] (Expr a)
+           | Fun Id (VEnv a) [Id] (Expr a)
            | P Operator [Value a]
            | C Id [Value a]
            deriving (Read, Show, Eq, Ord)

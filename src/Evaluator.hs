@@ -1,5 +1,6 @@
 module Evaluator (
   evaluateString,
+  evaluateStringWithEnv,
   evaluate
   ) where
 
@@ -14,16 +15,24 @@ evaluateString s = do
     p <- parse ts
     evaluate p
 
+evaluateStringWithEnv :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> String -> Either (Exception a) (Value a)
+evaluateStringWithEnv g s = do 
+  ts <- lexer s
+  case parseExpressions ts of 
+    Left e        -> Left e 
+    Right (p, []) -> evalE g p -- This is on purpuse for the interactive
+    Right (p, t)  -> Left $ EvaluatorError $ "There should be now more tokens:\nProgram " ++ (show p) ++ "\ntokens:" ++ (show t)
+
 evaluate :: (Read a, Show a, Ord a, Num a, RealFrac a) => Program a -> Either (Exception a) (Value a)
 evaluate p = evalP E.empty p
 
 evalP :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> Program a -> Either (Exception a) (Value a)
 evalP g [] =
   case E.lookup g "main" of
-    Just (Fun g' [] e)  -> evalE g e
-    Nothing             -> Left $ ScopeError "main" g
+    Just (Fun f g' [] e)  -> evalE g e
+    Nothing               -> Left $ ScopeError "main" g
 evalP g (Bind f _ vs e : rest) =
-  let g' = E.add g (f, Fun E.empty vs e)
+  let g' = E.add g (f, Fun f E.empty vs e)
   in evalP g' rest
 
 -- Evaluate an expression
@@ -31,14 +40,15 @@ evalE :: (Read a, Show a, Ord a, Num a, RealFrac a) => VEnv a -> Expr a -> Eithe
 evalE g (Const n) = return n
 evalE g (Var x)   =
   case E.lookup g x of
-    Just (Fun g' [] e)  -> evalE (E.union g' g) e
-    Just (Fun g' vs e)  -> return $ Fun (E.union g' g) vs e
-    Just n              -> return n
+    Just (Fun f g' [] e)  -> evalE (E.union g' g) e
+    Just (Fun f g' vs e)  -> return $ Fun f (E.union g' g) vs e
+    Just n                -> return n
     Nothing -> Left $ ScopeError x g
 
-evalE g (LetIn ((Bind x _ ids e):[]) b) = let g' = E.add g (x, Fun g ids e)
+evalE g (LetIn ((Bind x _ ids e):[]) End) = return $ Fun x g ids e
+evalE g (LetIn ((Bind x _ ids e):[]) b) = let g' = E.add g (x, Fun x g ids e)
                                 in evalE g' b
-evalE g (LetIn ((Bind x _ ids e):xs) b) = let g' = E.add g (x, Fun g ids e)
+evalE g (LetIn ((Bind x _ ids e):xs) b) = let g' = E.add g (x, Fun x g ids e)
                                 in evalE g' (LetIn xs b)
 
 evalE g (IfThenElse b t f) = do
@@ -63,14 +73,14 @@ evalE g (App a b) = case evalE g a of
   Right (C id v)          -> do
     b' <- evalE g b
     return $ C id (v ++ [b'])
-  Right (Fun g' (v:[]) e) -> do
+  Right (Fun _ g' (v:[]) e) -> do
     b' <- evalE g b
     let g'' = E.add g' (v, b')
     evalE g'' e
-  Right (Fun g' (v:vs) e) -> do
+  Right (Fun f g' (v:vs) e) -> do
     b' <- evalE g b
     let g'' = E.add g' (v, b')
-    return $ Fun g'' vs e
+    return $ Fun f g'' vs e
   Left s                  -> Left s
   t                       -> Left $ EvaluatorError $ "Could not be evaluated: " ++ (show t) ++ "\n" ++ (show a) ++ "\n" ++ (show b)
 
